@@ -235,6 +235,9 @@ async function completeShortcutChange(shortcutString) {
             currentSettings.windowShortcut = shortcutString;
         }
 
+        // Notify main process to refresh shortcuts
+        window.electronAPI.refreshShortcuts();
+        
         showNotificationIfEnabled('Shortcut updated', `New shortcut: ${shortcutString}`);
     } catch (error) {
         console.error('Error saving shortcut:', error);

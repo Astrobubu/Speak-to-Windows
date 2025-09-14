@@ -23,11 +23,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateShortcutDisplay();
 
     // Load and apply saved app state
-    const savedAppState = await window.electronAPI.getSetting('appEnabled');
-    if (savedAppState) {
-        isAppEnabled = savedAppState;
-        updateAppState();
-    }
+    const savedAppState = await window.electronAPI.getAppEnabled();
+    isAppEnabled = savedAppState;
+    updateAppState();
 });
 
 async function loadSettings() {
@@ -86,10 +84,17 @@ function setupEventListeners() {
         updateRecordingState(false, 'ready');
         showNotificationIfEnabled('Transcription ready!', 'Text copied to clipboard');
     });
+    
+    // Listen for shortcut updates
+    window.electronAPI.onShortcutsUpdated(() => {
+        loadSettings();
+        updateShortcutDisplay();
+    });
 }
 
 function updateShortcutDisplay() {
     recordShortcut.textContent = currentSettings.recordShortcut || 'Ctrl+Shift+R';
+    document.getElementById('window-shortcut').textContent = currentSettings.windowShortcut || 'Ctrl+Shift+S';
 }
 
 async function toggleApp() {
@@ -107,7 +112,7 @@ async function toggleApp() {
     updateAppState();
 
     // Store app state
-    await window.electronAPI.setSetting('appEnabled', isAppEnabled);
+    await window.electronAPI.setAppEnabled(isAppEnabled);
 }
 
 function updateAppState() {

@@ -9,6 +9,7 @@ let pillWindow;
 let settingsWindow;
 let tray;
 let isRecording = false;
+let isAppEnabled = false;
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -54,6 +55,7 @@ function createPillWindow() {
     skipTaskbar: true,
     resizable: false,
     transparent: true,
+    type: 'toolbar', // Helps ensure it stays on top on some platforms
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -63,6 +65,9 @@ function createPillWindow() {
 
   pillWindow.loadFile('pill.html');
   pillWindow.hide(); // Always start hidden
+  
+  // Ensure always on top even when other windows are focused
+  pillWindow.setAlwaysOnTop(true, 'screen-saver');
 
   // Pill interactions will be handled in pill-minimal.js
 }
@@ -138,6 +143,9 @@ function showMainWindow() {
 }
 
 function registerShortcuts() {
+  // Unregister all existing shortcuts first
+  globalShortcut.unregisterAll();
+  
   const recordShortcut = store.get('shortcuts.record', 'CommandOrControl+Shift+R');
   const toggleWindowShortcut = store.get('shortcuts.toggleWindow', 'CommandOrControl+Shift+S');
 
@@ -159,6 +167,9 @@ app.whenReady().then(() => {
   createPillWindow();
   createTray();
   registerShortcuts();
+  
+  // Load app enabled state
+  isAppEnabled = store.get('appEnabled', false);
 });
 
 app.on('window-all-closed', () => {
@@ -183,6 +194,11 @@ app.on('will-quit', () => {
 });
 
 function toggleRecording() {
+  // Check if app is enabled
+  if (!isAppEnabled) {
+    return;
+  }
+  
   if (isRecording) {
     stopRecording();
   } else {
@@ -194,6 +210,9 @@ function startRecording() {
   isRecording = true;
   if (pillWindow) {
     pillWindow.show();
+    // Ensure pill stays on top during recording
+    pillWindow.setAlwaysOnTop(true, 'screen-saver');
+    pillWindow.focus();
     pillWindow.webContents.send('start-recording');
   }
   if (mainWindow) {
@@ -205,6 +224,8 @@ function stopRecording() {
   isRecording = false;
   if (pillWindow) {
     pillWindow.webContents.send('stop-recording');
+    // Keep pill on top even after recording stops until it auto-hides
+    pillWindow.setAlwaysOnTop(true, 'screen-saver');
   }
   if (mainWindow) {
     mainWindow.webContents.send('recording-stopped');
@@ -310,4 +331,24 @@ ipcMain.on('hide-window', () => {
 
 ipcMain.on('open-settings', () => {
   createSettingsWindow();
+});
+
+// Handle shortcut refresh
+ipcMain.on('refresh-shortcuts', () => {
+  registerShortcuts();
+  // Notify main window to update shortcut display
+  if (mainWindow) {
+    mainWindow.webContents.send('shortcuts-updated');
+  }
+});
+
+// Handle app enable/disable
+ipcMain.handle('get-app-enabled', () => {
+  return isAppEnabled;
+});
+
+ipcMain.handle('set-app-enabled', (event, enabled) => {
+  isAppEnabled = enabled;
+  store.set('appEnabled', enabled);
+  return true;
 });

@@ -5,6 +5,8 @@ let dataArray;
 let animationId;
 let startTime;
 let isRecording = false;
+let isSliding = false;
+let shouldStayVisible = false;
 
 const pill = document.getElementById('pill');
 const statusIcon = document.getElementById('status-icon');
@@ -18,11 +20,18 @@ const pillHeight = 18;
 
 // Event listeners
 window.electronAPI.onStartRecording(() => {
-    showPillWithAnimation();
-    startRecording();
+    shouldStayVisible = true;
+    if (!pill.classList.contains('slide-in')) {
+        showPillWithAnimation();
+    }
+    // Small delay to ensure pill is visible before starting recording
+    setTimeout(() => {
+        startRecording();
+    }, 100);
 });
 
 window.electronAPI.onStopRecording(() => {
+    shouldStayVisible = false;
     stopRecording();
 });
 
@@ -34,6 +43,24 @@ pill.addEventListener('contextmenu', (e) => {
 
 pill.addEventListener('dblclick', () => {
     window.electronAPI.showMainWindow();
+});
+
+// Single click to toggle pill persistence
+pill.addEventListener('click', (e) => {
+    if (e.detail === 1) { // Single click only
+        setTimeout(() => {
+            if (e.detail === 1) { // Confirm it wasn't part of a double click
+                shouldStayVisible = !shouldStayVisible;
+                // Visual feedback - could add a brief highlight or something
+                if (shouldStayVisible) {
+                    pill.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.5)';
+                    setTimeout(() => {
+                        pill.style.boxShadow = '';
+                    }, 500);
+                }
+            }
+        }, 250);
+    }
 });
 
 // Hide context menu when clicking elsewhere
@@ -260,27 +287,47 @@ function resetPill() {
     pillCtx.clearRect(0, 0, pillWidth, pillHeight);
 
     // Auto-hide pill after processing is complete with animation
+    // But only if not recording and should not stay visible
     setTimeout(() => {
-        hidePillWithAnimation();
+        if (!isRecording && !shouldStayVisible) {
+            hidePillWithAnimation();
+        }
     }, 2000);
 }
 
 function showPillWithAnimation() {
+    isSliding = true;
+    
     // Remove any existing animation classes
     pill.classList.remove('slide-out', 'slide-in');
 
     // Start with slide-in animation
     pill.classList.add('slide-in');
+    
+    // Mark sliding as complete after animation
+    setTimeout(() => {
+        isSliding = false;
+    }, 300);
 }
 
 function hidePillWithAnimation() {
+    // Don't hide if recording or should stay visible
+    if (isRecording || shouldStayVisible) {
+        return;
+    }
+    
+    isSliding = true;
+    
     // Remove slide-in and add slide-out
     pill.classList.remove('slide-in');
     pill.classList.add('slide-out');
 
     // Actually hide the window after animation completes
     setTimeout(() => {
-        window.electronAPI.hidePill();
+        isSliding = false;
+        if (!isRecording && !shouldStayVisible) {
+            window.electronAPI.hidePill();
+        }
     }, 300); // Match the CSS transition duration
 }
 

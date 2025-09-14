@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setAutoPaste: (enabled) => ipcRenderer.invoke('set-auto-paste', enabled),
   getSetting: (key) => ipcRenderer.invoke('get-setting', key),
   setSetting: (key, value) => ipcRenderer.invoke('set-setting', key, value),
+  getAppEnabled: () => ipcRenderer.invoke('get-app-enabled'),
+  setAppEnabled: (enabled) => ipcRenderer.invoke('set-app-enabled', enabled),
 
   // Recording controls
   startRecording: () => ipcRenderer.send('start-recording-manual'),
@@ -33,11 +35,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onRecordingStarted: (callback) => ipcRenderer.on('recording-started', callback),
   onRecordingStopped: (callback) => ipcRenderer.on('recording-stopped', callback),
   onTranscriptReady: (callback) => ipcRenderer.on('transcript-ready', callback),
+  onShortcutsUpdated: (callback) => ipcRenderer.on('shortcuts-updated', callback),
 
   // Pill-specific events
   onStartRecording: (callback) => ipcRenderer.on('start-recording', callback),
   onStopRecording: (callback) => ipcRenderer.on('stop-recording', callback),
 
   // Processing complete
-  processingComplete: (transcript) => ipcRenderer.send('processing-complete', transcript)
+  processingComplete: (transcript) => ipcRenderer.send('processing-complete', transcript),
+  
+  // Refresh shortcuts
+  refreshShortcuts: () => ipcRenderer.send('refresh-shortcuts')
 });
