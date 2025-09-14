@@ -61,7 +61,16 @@ Due to Apple's security requirements, Mac builds must be created on macOS with:
 
 ### Build Options for Mac
 
-#### Option 1: Build on Mac
+#### Option 1: GitHub Actions (Recommended) ✅
+Automated builds using GitHub's macOS runners:
+1. **Push your code** to GitHub
+2. **Automatic builds** triggered on push/PR
+3. **Download artifacts** from Actions tab
+4. **No Mac required** - builds in the cloud!
+
+**Setup**: Already configured in `.github/workflows/build.yml`
+
+#### Option 2: Build on Mac 🖥️
 If you have access to a Mac:
 ```bash
 # Install dependencies
@@ -70,29 +79,22 @@ npm install
 # Build for Mac
 npm run build-mac
 ```
+**Detailed instructions**: See [`MAC_BUILD.md`](MAC_BUILD.md)
 
-#### Option 2: GitHub Actions (Recommended)
-Set up automated builds using GitHub Actions with macOS runners:
-```yaml
-# .github/workflows/build.yml
-name: Build
-on: [push, pull_request]
-jobs:
-  build-mac:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm install
-      - run: npm run build-mac
-```
-
-#### Option 3: Cloud Build Services
-- **Electron Forge**: Cross-platform builds
+#### Option 3: Cloud Build Services ☁️
 - **GitHub Codespaces**: macOS environment
 - **CircleCI**: macOS build environment
+- **Docker**: Cross-platform builds (Linux only)
+
+#### Option 4: Cross-Platform Script 🔧
+Use our enhanced build script:
+```bash
+# On Mac
+./build.sh mac
+
+# Auto-detect platform
+./build.sh auto
+```
 
 ## App Configuration
 
