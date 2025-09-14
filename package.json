@@ -1,6 +1,6 @@
 {
   "name": "voice-to-text",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cross-platform voice-to-text transcription app with floating waveform display",
   "main": "main.js",
   "scripts": {

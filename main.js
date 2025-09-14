@@ -14,7 +14,7 @@ let isAppEnabled = false;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 480,
-    height: 740,
+    height: 780,
     resizable: false,
     frame: false,
     show: false, // Keep hidden until ready
@@ -339,7 +339,9 @@ ipcMain.on('hide-window', () => {
 });
 
 ipcMain.on('open-settings', () => {
-  createSettingsWindow();
+  // Settings are now handled as a modal in the main window
+  // This IPC handler is kept for backward compatibility
+  console.log('Settings modal should be handled in renderer process');
 });
 
 // Handle shortcut refresh
