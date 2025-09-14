@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Tray Icon</title>
+</head>
+<body>
+    <canvas id="canvas" width="16" height="16" style="border: 1px solid #ccc; image-rendering: pixelated; width: 64px; height: 64px;"></canvas>
+    <br><br>
+    <button onclick="downloadIcon()">Download Icon</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Draw a simple microphone icon
+        ctx.fillStyle = '#333333';
+
+        // Microphone body
+        ctx.fillRect(6, 3, 4, 8);
+        ctx.fillStyle = '#666666';
+        ctx.fillRect(7, 4, 2, 6);
+
+        // Microphone stand
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(7, 11, 2, 2);
+        ctx.fillRect(5, 13, 6, 1);
+
+        function downloadIcon() {
+            const link = document.createElement('a');
+            link.download = 'tray-icon.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>

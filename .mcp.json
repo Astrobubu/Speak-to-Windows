@@ -1,0 +1,59 @@
+
+  {
+    "mcpServers": {
+      "shadcn": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "shadcn@latest",
+          "mcp"
+        ]
+      },
+      "sequential-thinking": {
+        "type": "stdio",
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "@modelcontextprotocol/server-sequential-thinking"
+        ],
+        "env": {}
+      },
+      "context7": {
+        "type": "stdio",
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "-y",
+          "@upstash/context7-mcp",
+          "--api-key",
+          "ctx7sk-3a55a27e-8641-492c-b7a3-562fd1e0a4f8"
+        ]
+      },
+      "supabase": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "-y",
+          "@supabase/mcp-server-supabase@latest",
+          "--project-ref=sxxocwowbnlpdjlsitbe"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "sbp_3cb8e3b667e1094a031a268c5fa8d5271b4c56e2"
+        }
+      },
+      "playwright": {
+        "type": "stdio",
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "@playwright/mcp@latest"
+        ],
+        "env": {}
+      }
+    }
+  }

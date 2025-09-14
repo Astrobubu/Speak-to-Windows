@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speak to Windows</title>
+    <link rel="stylesheet" href="chrome-styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Custom Titlebar -->
+        <div class="titlebar">
+            <div class="drag-region"></div>
+            <div class="titlebar-buttons">
+                <button class="titlebar-button minimize" id="minimize-btn">
+                    <svg width="8" height="8" viewBox="0 0 8 8">
+                        <path d="M1 4h6" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button class="titlebar-button close" id="close-btn">
+                    <svg width="8" height="8" viewBox="0 0 8 8">
+                        <path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="content">
+            <!-- App Toggle Section -->
+            <div class="app-toggle-section">
+                <!-- iOS Style Toggle Switch -->
+                <div class="toggle-container">
+                    <div class="microphone-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C10.9 2 10 2.9 10 4V12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12V4C14 2.9 13.1 2 12 2Z" fill="currentColor"/>
+                            <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10H7V12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12V10H19Z" fill="currentColor"/>
+                            <path d="M12 19V22H8V24H16V22H12V19Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div class="slide-toggle" id="app-toggle">
+                        <div class="toggle-track" id="toggle-track">
+                            <div class="toggle-thumb" id="toggle-thumb"></div>
+                        </div>
+                        <span class="toggle-label" id="toggle-text">Enable App</span>
+                    </div>
+                </div>
+
+                <button class="settings-button" id="settings-btn" title="Settings">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Status indicator -->
+            <div class="status-section">
+                <div class="status-indicator" id="status-indicator">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span id="status-text">Disabled</span>
+                </div>
+            </div>
+
+            <!-- Shortcuts info -->
+            <div class="shortcuts-info">
+                <div class="shortcut-item">
+                    <kbd id="record-shortcut">Ctrl+Shift+R</kbd>
+                    <span>Record</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd id="window-shortcut">Ctrl+Shift+S</kbd>
+                    <span>Show/Hide</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="chrome-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Speak to Windows</title>
+    <link rel="stylesheet" href="chrome-styles.css">
+    <style>
+        .settings-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 32px);
+        }
+
+        .settings-header {
+            margin-bottom: 30px;
+        }
+
+        .settings-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .settings-group {
+            margin-bottom: 30px;
+        }
+
+        .settings-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-actions {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            background: var(--bg-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <!-- Custom Titlebar -->
+        <div class="titlebar">
+            <div class="drag-region"></div>
+            <div class="titlebar-buttons">
+                <button class="titlebar-button minimize" id="minimize-btn">
+                    <svg width="8" height="8" viewBox="0 0 8 8">
+                        <path d="M1 4h6" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button class="titlebar-button close" id="close-btn">
+                    <svg width="8" height="8" viewBox="0 0 8 8">
+                        <path d="M1.5 1.5l5 5M6.5 1.5l-5 5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <div class="settings-header">
+                <h1>Settings</h1>
+            </div>
+
+            <!-- API Key -->
+            <div class="setting-group">
+                <label for="api-key">OpenAI API Key</label>
+                <input type="password" id="api-key" placeholder="sk-...">
+            </div>
+
+            <!-- Notifications -->
+            <div class="setting-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="show-notifications" checked>
+                    <span class="checkmark"></span>
+                    Show notifications when ready
+                </label>
+            </div>
+
+            <!-- Auto-start -->
+            <div class="setting-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="auto-start">
+                    <span class="checkmark"></span>
+                    Start with Windows
+                </label>
+            </div>
+
+            <!-- Shortcuts -->
+            <div class="setting-group">
+                <label for="record-shortcut-input">Recording Shortcut</label>
+                <div class="shortcut-input-container">
+                    <input type="text" id="record-shortcut-input" placeholder="Ctrl+Shift+R" readonly>
+                    <button class="change-shortcut" id="change-record-shortcut" data-target="record-shortcut-input">Change</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label for="window-shortcut-input">Show/Hide Window</label>
+                <div class="shortcut-input-container">
+                    <input type="text" id="window-shortcut-input" placeholder="Ctrl+Shift+S" readonly>
+                    <button class="change-shortcut" id="change-window-shortcut" data-target="window-shortcut-input">Change</button>
+                </div>
+            </div>
+
+            <!-- Pill Position -->
+            <div class="setting-group">
+                <label for="pill-position">Pill Position</label>
+                <select id="pill-position">
+                    <option value="bottom-center">Bottom Center</option>
+                    <option value="top-center">Top Center</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="top-right">Top Right</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Settings Actions -->
+        <div class="settings-actions">
+            <button class="btn-secondary" id="cancel-settings">Cancel</button>
+            <button class="btn-primary" id="save-settings">Save</button>
+        </div>
+    </div>
+
+    <script src="settings-renderer.js"></script>
+</body>
+</html>
