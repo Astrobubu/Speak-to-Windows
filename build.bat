@@ -48,24 +48,35 @@ goto :eof
 :build_windows
 call :check_dependencies
 echo 🪟 Building for Windows...
+echo 📁 Generating icons...
+node generate-icons.js
+echo 🔨 Building Windows packages...
 call npm run build-win
 if %errorlevel% neq 0 (
     echo ❌ Windows build failed
     exit /b 1
 )
 echo ✅ Windows build complete!
+echo 📦 Created files:
+echo   - dist\Voice to Text-1.0.0-x64.exe (NSIS Installer)
+echo   - dist\Voice to Text-1.0.0-portable.exe (Portable)
 goto :end
 
 :build_mac
 call :check_dependencies
 echo 🍎 Building for macOS...
-echo ⚠️  Note: macOS builds should be run on macOS for best results
+echo ⚠️  Note: macOS builds require macOS environment
+echo ⚠️  Use GitHub Actions or build on Mac for proper macOS builds
+echo 📁 Generating icons...
+node generate-icons.js
+echo 🔨 Attempting macOS build...
 call npm run build-mac
 if %errorlevel% neq 0 (
-    echo ❌ macOS build failed
-    exit /b 1
+    echo ❌ macOS build failed (expected on Windows)
+    echo 💡 See DISTRIBUTION.md for macOS build alternatives
+) else (
+    echo ✅ macOS build complete!
 )
-echo ✅ macOS build complete!
 goto :end
 
 :build_all

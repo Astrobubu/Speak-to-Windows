@@ -1,44 +1,43 @@
 const sharp = require('sharp');
 const fs = require('fs');
+const path = require('path');
 
 async function generateIcons() {
   try {
     console.log('Generating icons from logo.png...');
 
-    // Generate .ico for Windows (multiple sizes in one file)
-    const sizes = [16, 32, 48, 256];
-    const iconBuffers = [];
-
-    for (const size of sizes) {
-      const buffer = await sharp('logo.png')
-        .resize(size, size)
-        .png()
-        .toBuffer();
-      iconBuffers.push(buffer);
-    }
-
-    // For simplicity, just create a 256x256 .ico
-    await sharp('logo.png')
-      .resize(256, 256)
-      .png()
-      .toFile('icon.ico');
-
-    // Generate .icns for Mac (just copy the PNG for now)
-    await sharp('logo.png')
-      .resize(512, 512)
-      .png()
-      .toFile('icon.icns');
-
-    // Generate smaller icon.png for app use
+    // Generate proper .png icon for app use
     await sharp('logo.png')
       .resize(64, 64)
       .png()
       .toFile('icon.png');
+    
+    console.log('✓ Generated icon.png (64x64) for app UI');
 
-    console.log('Icons generated successfully!');
-    console.log('- icon.png (64x64) for app UI');
-    console.log('- icon.ico (256x256) for Windows');
-    console.log('- icon.icns (512x512) for Mac');
+    // Generate PNG files for build directory
+    const buildDir = 'build';
+    if (!fs.existsSync(buildDir)) {
+      fs.mkdirSync(buildDir);
+    }
+
+    // Generate multiple sizes for proper icon files
+    const sizes = [16, 24, 32, 48, 64, 128, 256, 512, 1024];
+    
+    for (const size of sizes) {
+      await sharp('logo.png')
+        .resize(size, size)
+        .png()
+        .toFile(path.join(buildDir, `icon-${size}x${size}.png`));
+    }
+
+    // Copy the original icon files that were working
+    console.log('\nNOTE: For proper .ico and .icns files, please use:');
+    console.log('1. Online converter like https://convertio.co/png-ico/ for .ico');
+    console.log('2. Online converter like https://convertio.co/png-icns/ for .icns');
+    console.log('\nOr use the create-icon.html tool in the browser for better results.');
+    
+    console.log('\n✓ Generated PNG files in build/ directory');
+    console.log('PNG files generated for sizes:', sizes.join(', '));
 
   } catch (error) {
     console.error('Error generating icons:', error);
