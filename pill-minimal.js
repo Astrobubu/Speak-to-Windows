@@ -252,6 +252,12 @@ async function processAudio(audioBlob) {
         formData.append('model', 'whisper-1');
         formData.append('response_format', 'text');
 
+        // Add language if set
+        const language = await window.electronAPI.getSetting('language');
+        if (language) {
+            formData.append('language', language);
+        }
+
         const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
             method: 'POST',
             headers: {

@@ -3,13 +3,9 @@ let isRecording = false;
 let currentSettings = {};
 
 // DOM elements
-const statusIndicator = document.getElementById('status-indicator');
-const statusDot = document.getElementById('status-dot');
-const statusText = document.getElementById('status-text');
 const appToggle = document.getElementById('app-toggle');
 const toggleTrack = document.getElementById('toggle-track');
 const toggleThumb = document.getElementById('toggle-thumb');
-const toggleText = document.getElementById('toggle-text');
 const recordShortcut = document.getElementById('record-shortcut');
 
 const settingsBtn = document.getElementById('settings-btn');
@@ -18,6 +14,9 @@ const closeBtn = document.getElementById('close-btn');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Add loaded class to prevent flash
+    document.body.classList.add('loaded');
+    
     await loadSettings();
     setupEventListeners();
     updateShortcutDisplay();
@@ -26,6 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const savedAppState = await window.electronAPI.getAppEnabled();
     isAppEnabled = savedAppState;
     updateAppState();
+
+    // Initial window size adjustment
+    setTimeout(adjustWindowSize, 100);
 });
 
 async function loadSettings() {
@@ -40,15 +42,7 @@ async function loadSettings() {
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center'
         };
 
-        // Update UI
-        if (currentSettings.apiKey) {
-            apiKeyInput.value = currentSettings.apiKey;
-        }
-        showNotifications.checked = currentSettings.showNotifications;
-        autoStart.checked = currentSettings.autoStart;
-        recordShortcutInput.value = currentSettings.recordShortcut;
-        windowShortcutInput.value = currentSettings.windowShortcut;
-        pillPosition.value = currentSettings.pillPosition;
+        // Note: UI updates for settings will be handled in settings window
 
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -58,6 +52,10 @@ async function loadSettings() {
 function setupEventListeners() {
     // App toggle
     appToggle.addEventListener('click', toggleApp);
+
+    // Auto-resize window based on content
+    window.addEventListener('resize', adjustWindowSize);
+    document.addEventListener('DOMContentLoaded', adjustWindowSize);
 
     // Titlebar buttons
     minimizeBtn.addEventListener('click', () => {
@@ -115,42 +113,46 @@ async function toggleApp() {
     await window.electronAPI.setAppEnabled(isAppEnabled);
 }
 
-function updateAppState() {
-    // Update slide toggle
-    toggleTrack.classList.toggle('enabled', isAppEnabled);
 
-    if (isAppEnabled) {
-        toggleText.textContent = 'Disable App';
-        statusText.textContent = 'Ready';
-        statusIndicator.className = 'status-indicator ready';
-    } else {
-        toggleText.textContent = 'Enable App';
-        statusText.textContent = 'Disabled';
-        statusIndicator.className = 'status-indicator';
+function updateAppState() {
+    // Update toggle
+    if (toggleTrack) {
+        toggleTrack.classList.toggle('enabled', isAppEnabled);
+    }
+
+    adjustWindowSize();
+}
+
+
+function adjustWindowSize() {
+    // Calculate content height
+    const content = document.querySelector('.content');
+    if (content) {
+        const rect = content.getBoundingClientRect();
+        const titlebarHeight = 36;
+        const padding = 60; // Extra padding for safety
+
+        const newHeight = Math.max(500, rect.height + titlebarHeight + padding);
+        const newWidth = Math.max(480, 520);
+
+        // Send resize request to main process
+        if (window.electronAPI.resizeWindow) {
+            window.electronAPI.resizeWindow(newWidth, newHeight);
+        }
     }
 }
 
 function updateRecordingState(recording, state = null) {
-    if (!isAppEnabled) return;
-
     isRecording = recording;
 
-    // Update status indicator based on recording state
-    const finalState = state || (recording ? 'recording' : 'ready');
-    statusIndicator.className = `status-indicator ${finalState}`;
-
-    switch (finalState) {
-        case 'recording':
-            statusText.textContent = 'Recording...';
-            break;
-        case 'processing':
-            statusText.textContent = 'Processing...';
-            break;
-        case 'ready':
-        default:
-            statusText.textContent = 'Ready';
-            break;
+    if (state === 'processing') {
+        isRecording = 'processing';
     }
+
+    // Update app state which includes recorder
+    updateAppState();
+
+    adjustWindowSize();
 }
 
 function openSettings() {

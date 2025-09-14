@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Recording controls
   startRecording: () => ipcRenderer.send('start-recording-manual'),
   stopRecording: () => ipcRenderer.send('stop-recording-manual'),
+  startRecordingManual: () => ipcRenderer.send('start-recording-manual'),
+  stopRecordingManual: () => ipcRenderer.send('stop-recording-manual'),
 
   // Window controls
   showMainWindow: () => ipcRenderer.send('show-main-window'),

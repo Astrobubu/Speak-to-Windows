@@ -14,16 +14,18 @@ let isAppEnabled = false;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 480,
-    height: 360,
+    height: 740,
     resizable: false,
     frame: false,
+    show: false, // Keep hidden until ready
+    backgroundColor: '#ffffff', // Set background to match app theme
+    icon: path.join(__dirname, 'icon.png'), // Use the existing icon
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    title: 'Speak to Windows',
-    show: false
+    title: 'Speak to Windows'
   });
 
   mainWindow.loadFile('index.html');
@@ -73,24 +75,25 @@ function createPillWindow() {
 }
 
 function createSettingsWindow() {
-  if (settingsWindow) {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.focus();
     return;
   }
 
   settingsWindow = new BrowserWindow({
     width: 520,
-    height: 600,
+    height: 750,
     resizable: true,
     frame: false,
     parent: mainWindow,
+    show: false, // Keep hidden until ready
+    backgroundColor: '#ffffff', // Set background to match app theme
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    title: 'Settings - Speak to Windows',
-    show: false
+    title: 'Settings'
   });
 
   settingsWindow.loadFile('settings.html');
@@ -105,8 +108,8 @@ function createSettingsWindow() {
 }
 
 function createTray() {
-  // Simple microphone icon (base64 encoded SVG)
-  const trayImage = nativeImage.createFromDataURL('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Im0xMiAxdjRhNCA0IDAgMCAwIDQiLz48cGF0aCBkPSJNOCA4djJhNCA0IDAgMCAwIDggMHYtMiIvPjxwYXRoIGQ9Im0xMiAyMHYtNiIvPjwvc3ZnPg==');
+  // Use the existing icon as tray icon
+  const trayImage = nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({width: 16, height: 16});
 
   tray = new Tray(trayImage);
 
@@ -209,11 +212,17 @@ function toggleRecording() {
 function startRecording() {
   isRecording = true;
   if (pillWindow) {
+    // Force show the pill and ensure it stays visible
     pillWindow.show();
-    // Ensure pill stays on top during recording
     pillWindow.setAlwaysOnTop(true, 'screen-saver');
     pillWindow.focus();
-    pillWindow.webContents.send('start-recording');
+
+    // Ensure the pill window is fully ready before starting recording
+    setTimeout(() => {
+      if (pillWindow && !pillWindow.isDestroyed()) {
+        pillWindow.webContents.send('start-recording');
+      }
+    }, 100);
   }
   if (mainWindow) {
     mainWindow.webContents.send('recording-started');

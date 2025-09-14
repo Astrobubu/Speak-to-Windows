@@ -11,12 +11,16 @@ const autoStart = document.getElementById('auto-start');
 const recordShortcutInput = document.getElementById('record-shortcut-input');
 const windowShortcutInput = document.getElementById('window-shortcut-input');
 const pillPosition = document.getElementById('pill-position');
+const languageSelect = document.getElementById('language-select');
 
 const cancelSettings = document.getElementById('cancel-settings');
 const saveSettings = document.getElementById('save-settings');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Add loaded class to prevent flash
+    document.body.classList.add('loaded');
+    
     await loadSettings();
     setupEventListeners();
 });
@@ -30,7 +34,8 @@ async function loadSettings() {
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
             recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Ctrl+Shift+R',
             windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Ctrl+Shift+S',
-            pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center'
+            pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
+            language: await window.electronAPI.getSetting('language') || ''
         };
 
         // Update UI
@@ -42,6 +47,7 @@ async function loadSettings() {
         recordShortcutInput.value = currentSettings.recordShortcut;
         windowShortcutInput.value = currentSettings.windowShortcut;
         pillPosition.value = currentSettings.pillPosition;
+        languageSelect.value = currentSettings.language;
 
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -98,6 +104,9 @@ async function saveSettingsHandler() {
 
         await window.electronAPI.setSetting('pillPosition', pillPosition.value);
         currentSettings.pillPosition = pillPosition.value;
+
+        await window.electronAPI.setSetting('language', languageSelect.value);
+        currentSettings.language = languageSelect.value;
 
         window.close();
         showNotificationIfEnabled('Settings saved', 'Your preferences have been updated');
