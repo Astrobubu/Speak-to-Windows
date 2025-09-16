@@ -25,7 +25,7 @@ function createMainWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    title: 'Speak to Windows'
+    title: 'Voice to Text'
   });
 
   mainWindow.loadFile('index.html');
@@ -133,7 +133,7 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.setToolTip('Speak to Windows');
+  tray.setToolTip('Voice to Text');
 
   tray.on('click', showMainWindow);
 }
@@ -275,7 +275,7 @@ ipcMain.handle('paste-text', async (event, text) => {
     // Show notification that text is ready to paste
     const notification = new require('electron').Notification({
       title: 'Transcription Ready',
-      body: 'Text copied to clipboard. Press Ctrl+V to paste.',
+      body: 'Text copied to clipboard. Press Cmd+V to paste.',
       silent: true
     });
     notification.show();

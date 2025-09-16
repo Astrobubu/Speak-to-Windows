@@ -32,8 +32,8 @@ async function loadSettings() {
             apiKey: await window.electronAPI.getApiKey() || '',
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
-            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Ctrl+Shift+R',
-            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Ctrl+Shift+S',
+            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
+            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S',
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
             language: await window.electronAPI.getSetting('language') || ''
         };
@@ -179,10 +179,10 @@ function cancelShortcutChange(button) {
     // Restore original value
     if (targetInputId === 'record-shortcut-input') {
         targetInput.value = currentSettings.recordShortcut;
-        targetInput.placeholder = 'Ctrl+Shift+R';
+        targetInput.placeholder = 'Cmd+Shift+R';
     } else if (targetInputId === 'window-shortcut-input') {
         targetInput.value = currentSettings.windowShortcut;
-        targetInput.placeholder = 'Ctrl+Shift+S';
+        targetInput.placeholder = 'Cmd+Shift+S';
     }
 }
 

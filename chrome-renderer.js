@@ -59,8 +59,8 @@ async function loadSettings() {
             apiKey: await window.electronAPI.getApiKey() || '',
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
-            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Ctrl+Shift+R',
-            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Ctrl+Shift+S',
+            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
+            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S',
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center'
         };
 
@@ -159,8 +159,8 @@ function setupEventListeners() {
 }
 
 function updateShortcutDisplay() {
-    recordShortcut.textContent = currentSettings.recordShortcut || 'Ctrl+Shift+R';
-    document.getElementById('window-shortcut').textContent = currentSettings.windowShortcut || 'Ctrl+Shift+S';
+    recordShortcut.textContent = currentSettings.recordShortcut || 'Cmd+Shift+R';
+    document.getElementById('window-shortcut').textContent = currentSettings.windowShortcut || 'Cmd+Shift+S';
 }
 
 async function toggleApp() {
@@ -236,8 +236,8 @@ async function loadSettingsValues() {
         const apiKey = await window.electronAPI.getApiKey();
         const autoPaste = await window.electronAPI.getAutoPaste();
         const autoStart = await window.electronAPI.getSetting('autoStart') || false;
-        const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || 'Ctrl+Shift+R';
-        const windowShortcut = await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Ctrl+Shift+S';
+        const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R';
+        const windowShortcut = await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S';
         const language = await window.electronAPI.getSetting('language') || '';
         const pillPosition = await window.electronAPI.getSetting('pillPosition') || 'bottom-center';
         
