@@ -7,6 +7,7 @@ let startTime;
 let isRecording = false;
 let isSliding = false;
 let shouldStayVisible = false;
+let micStream = null;
 
 const pill = document.getElementById('pill');
 const statusIcon = document.getElementById('status-icon');
@@ -18,16 +19,18 @@ const contextMenu = document.getElementById('context-menu');
 const pillWidth = 60;
 const pillHeight = 18;
 
+
 // Event listeners
 window.electronAPI.onStartRecording(() => {
     shouldStayVisible = true;
     if (!pill.classList.contains('slide-in')) {
         showPillWithAnimation();
     }
-    // Small delay to ensure pill is visible before starting recording
-    setTimeout(() => {
-        startRecording();
-    }, 100);
+    // Show connecting state immediately
+    pill.classList.add('connecting');
+    updateStatusIcon('connecting');
+    // Start recording immediately
+    startRecording();
 });
 
 window.electronAPI.onStopRecording(() => {
@@ -98,57 +101,90 @@ function hideContextMenu() {
 
 async function startRecording() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        // Request microphone access with optimized constraints
+        micStream = await navigator.mediaDevices.getUserMedia({
             audio: {
                 channelCount: 1,
                 sampleRate: 16000,
                 echoCancellation: true,
-                noiseSuppression: true
+                noiseSuppression: true,
+                autoGainControl: false,
+                latency: 0
             }
         });
 
         // Setup audio analysis
         audioContext = new AudioContext();
+
+        // Ensure AudioContext is running (required on some browsers/macOS)
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
         analyser = audioContext.createAnalyser();
-        const source = audioContext.createMediaStreamSource(stream);
+        const source = audioContext.createMediaStreamSource(micStream);
         source.connect(analyser);
 
-        analyser.fftSize = 128; // Smaller for iPhone-style bars
+        console.log('AudioContext state:', audioContext.state);
+        console.log('Stream active:', micStream.active);
+        console.log('Stream tracks:', micStream.getTracks().length);
+
+        analyser.fftSize = 128;
         const bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
 
-        // Setup MediaRecorder
-        mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/webm;codecs=opus'
-        });
+        // Setup MediaRecorder with fallback mimeTypes for macOS
+        let mimeType = 'audio/webm;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'audio/wav';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = ''; // Use default
+                }
+            }
+        }
+
+        console.log('Using mimeType:', mimeType);
+
+        mediaRecorder = new MediaRecorder(micStream, mimeType ? { mimeType } : {});
 
         const audioChunks = [];
 
         mediaRecorder.ondataavailable = (event) => {
+            console.log('Audio data received, size:', event.data.size);
             audioChunks.push(event.data);
         };
 
         mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const blobType = mimeType || 'audio/webm';
+            const audioBlob = new Blob(audioChunks, { type: blobType });
+            console.log('Created audio blob, size:', audioBlob.size, 'type:', blobType);
             await processAudio(audioBlob);
 
-            // Cleanup
-            stream.getTracks().forEach(track => track.stop());
+            // Clean up resources
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+            }
             if (audioContext) {
                 audioContext.close();
+                audioContext = null;
             }
         };
 
         mediaRecorder.start();
         isRecording = true;
 
-        // Update UI
+        // Update UI - transition from connecting to recording
+        pill.classList.remove('connecting');
         pill.classList.add('recording');
         updateStatusIcon('recording');
         startWaveformAnimation();
 
     } catch (error) {
         console.error('Error starting recording:', error);
+        pill.classList.remove('connecting');
         showError('Microphone access denied');
     }
 }
@@ -171,6 +207,11 @@ function updateStatusIcon(state) {
     let iconSvg = '';
 
     switch (state) {
+        case 'connecting':
+            iconSvg = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="8" r="4" fill="currentColor"/>
+            </svg>`;
+            break;
         case 'recording':
             iconSvg = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="8" cy="8" r="6" fill="currentColor"/>
@@ -288,7 +329,7 @@ async function processAudio(audioBlob) {
 }
 
 function resetPill() {
-    pill.classList.remove('recording', 'processing');
+    pill.classList.remove('recording', 'processing', 'connecting');
     updateStatusIcon('ready');
     pillCtx.clearRect(0, 0, pillWidth, pillHeight);
 
@@ -298,7 +339,7 @@ function resetPill() {
         if (!isRecording && !shouldStayVisible) {
             hidePillWithAnimation();
         }
-    }, 2000);
+    }, 1000);
 }
 
 function showPillWithAnimation() {

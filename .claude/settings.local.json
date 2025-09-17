@@ -14,7 +14,17 @@
       "WebFetch(domain:www.flaticon.com)",
       "Bash(where magick)",
       "Bash(npm install:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(open:*)",
+      "Bash(codesign:*)",
+      "Bash(xattr:*)",
+      "Bash(spctl:*)",
+      "Bash(log show:*)",
+      "Bash(console)",
+      "Bash(hdiutil attach:*)",
+      "Read(//private/tmp/voice-to-text-test/**)",
+      "Bash(killall:*)",
+      "Bash(hdiutil detach:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

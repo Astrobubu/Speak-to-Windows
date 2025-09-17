@@ -1,6 +1,6 @@
 {
   "name": "voice-to-text",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Cross-platform voice-to-text transcription app with floating waveform display",
   "main": "main.js",
   "scripts": {
@@ -40,7 +40,8 @@
       "output": "dist",
       "buildResources": "build"
     },
-    "icon": "build/icon-256x256.png",
+    "icon": "icon.icns",
+    "afterSign": "build/afterSign.js",
     "files": [
       "**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
@@ -107,7 +108,14 @@
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "notarize": false,
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "This app needs microphone access to record and transcribe your voice to text.",
+        "NSCameraUsageDescription": "This app does not use the camera."
+      },
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "dmg": {
       "title": "${productName} ${version}",

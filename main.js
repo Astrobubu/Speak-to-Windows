@@ -217,12 +217,10 @@ function startRecording() {
     pillWindow.setAlwaysOnTop(true, 'screen-saver');
     pillWindow.focus();
 
-    // Ensure the pill window is fully ready before starting recording
-    setTimeout(() => {
-      if (pillWindow && !pillWindow.isDestroyed()) {
-        pillWindow.webContents.send('start-recording');
-      }
-    }, 100);
+    // Send recording command immediately
+    if (pillWindow && !pillWindow.isDestroyed()) {
+      pillWindow.webContents.send('start-recording');
+    }
   }
   if (mainWindow) {
     mainWindow.webContents.send('recording-started');
