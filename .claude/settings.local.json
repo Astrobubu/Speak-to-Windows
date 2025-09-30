@@ -24,7 +24,11 @@
       "Bash(hdiutil attach:*)",
       "Read(//private/tmp/voice-to-text-test/**)",
       "Bash(killall:*)",
-      "Bash(hdiutil detach:*)"
+      "Bash(hdiutil detach:*)",
+      "Bash(npm run build-win:*)",
+      "Bash(npm run build-mac:*)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

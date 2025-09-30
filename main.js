@@ -67,9 +67,23 @@ function createPillWindow() {
 
   pillWindow.loadFile('pill.html');
   pillWindow.hide(); // Always start hidden
-  
+
   // Ensure always on top even when other windows are focused
-  pillWindow.setAlwaysOnTop(true, 'screen-saver');
+  // Use 'screen-saver' level for maximum priority on Windows
+  pillWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+
+  // Windows-specific: Prevent window from going to background
+  if (process.platform === 'win32') {
+    pillWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    pillWindow.setSkipTaskbar(true);
+  }
+
+  // Keep window focused and on top periodically when visible
+  pillWindow.on('blur', () => {
+    if (pillWindow && !pillWindow.isDestroyed() && pillWindow.isVisible()) {
+      pillWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    }
+  });
 
   // Pill interactions will be handled in pill-minimal.js
 }
@@ -148,21 +162,20 @@ function showMainWindow() {
 function registerShortcuts() {
   // Unregister all existing shortcuts first
   globalShortcut.unregisterAll();
-  
+
   const recordShortcut = store.get('shortcuts.record', 'CommandOrControl+Shift+R');
-  const toggleWindowShortcut = store.get('shortcuts.toggleWindow', 'CommandOrControl+Shift+S');
 
-  globalShortcut.register(recordShortcut, () => {
-    toggleRecording();
-  });
+  try {
+    const registered = globalShortcut.register(recordShortcut, () => {
+      toggleRecording();
+    });
 
-  globalShortcut.register(toggleWindowShortcut, () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      showMainWindow();
+    if (!registered) {
+      console.error('Failed to register recording shortcut');
     }
-  });
+  } catch (error) {
+    console.error('Error registering shortcuts:', error);
+  }
 }
 
 app.whenReady().then(() => {
@@ -196,46 +209,84 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll();
 });
 
+let recordingLock = false;
+
 function toggleRecording() {
   // Check if app is enabled
   if (!isAppEnabled) {
+    console.log('Recording blocked: app is disabled');
     return;
   }
-  
-  if (isRecording) {
-    stopRecording();
-  } else {
-    startRecording();
+
+  // Prevent rapid successive calls (debouncing)
+  if (recordingLock) {
+    console.log('Recording blocked: operation in progress');
+    return;
   }
+
+  recordingLock = true;
+
+  try {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  } catch (error) {
+    console.error('Error toggling recording:', error);
+    recordingLock = false;
+  }
+
+  // Release lock after a delay to prevent rapid toggling
+  setTimeout(() => {
+    recordingLock = false;
+  }, 500);
 }
 
 function startRecording() {
-  isRecording = true;
-  if (pillWindow) {
-    // Force show the pill and ensure it stays visible
-    pillWindow.show();
-    pillWindow.setAlwaysOnTop(true, 'screen-saver');
-    pillWindow.focus();
+  try {
+    isRecording = true;
 
-    // Send recording command immediately
     if (pillWindow && !pillWindow.isDestroyed()) {
+      // Force show the pill and ensure it stays visible
+      pillWindow.show();
+      pillWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+
+      // Windows-specific fixes for visibility
+      if (process.platform === 'win32') {
+        pillWindow.moveTop();
+        pillWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+      }
+
+      // Send recording command immediately
       pillWindow.webContents.send('start-recording');
     }
-  }
-  if (mainWindow) {
-    mainWindow.webContents.send('recording-started');
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('recording-started');
+    }
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    isRecording = false;
+    recordingLock = false;
   }
 }
 
 function stopRecording() {
-  isRecording = false;
-  if (pillWindow) {
-    pillWindow.webContents.send('stop-recording');
-    // Keep pill on top even after recording stops until it auto-hides
-    pillWindow.setAlwaysOnTop(true, 'screen-saver');
-  }
-  if (mainWindow) {
-    mainWindow.webContents.send('recording-stopped');
+  try {
+    isRecording = false;
+
+    if (pillWindow && !pillWindow.isDestroyed()) {
+      pillWindow.webContents.send('stop-recording');
+      // Keep pill on top even after recording stops until it auto-hides
+      pillWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('recording-stopped');
+    }
+  } catch (error) {
+    console.error('Error stopping recording:', error);
   }
 }
 

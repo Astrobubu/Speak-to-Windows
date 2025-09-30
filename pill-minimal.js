@@ -8,6 +8,8 @@ let isRecording = false;
 let isSliding = false;
 let shouldStayVisible = false;
 let micStream = null;
+let isProcessing = false;
+let recordingDebounce = false;
 
 const pill = document.getElementById('pill');
 const statusIcon = document.getElementById('status-icon');
@@ -22,18 +24,41 @@ const pillHeight = 18;
 
 // Event listeners
 window.electronAPI.onStartRecording(() => {
+    // Prevent duplicate start commands
+    if (isRecording || isProcessing || recordingDebounce) {
+        console.log('Ignoring start command: already recording or processing');
+        return;
+    }
+
+    recordingDebounce = true;
+    setTimeout(() => { recordingDebounce = false; }, 300);
+
     shouldStayVisible = true;
     if (!pill.classList.contains('slide-in')) {
         showPillWithAnimation();
     }
+
+    // Clear any existing state classes first
+    pill.classList.remove('recording', 'processing');
+
     // Show connecting state immediately
     pill.classList.add('connecting');
     updateStatusIcon('connecting');
+
     // Start recording immediately
     startRecording();
 });
 
 window.electronAPI.onStopRecording(() => {
+    // Prevent duplicate stop commands
+    if (!isRecording || recordingDebounce) {
+        console.log('Ignoring stop command: not recording or debounce active');
+        return;
+    }
+
+    recordingDebounce = true;
+    setTimeout(() => { recordingDebounce = false; }, 300);
+
     shouldStayVisible = false;
     stopRecording();
 });
@@ -100,6 +125,12 @@ function hideContextMenu() {
 }
 
 async function startRecording() {
+    // Prevent starting if already recording
+    if (isRecording) {
+        console.log('Already recording, ignoring start request');
+        return;
+    }
+
     try {
         // Request microphone access with optimized constraints
         micStream = await navigator.mediaDevices.getUserMedia({
@@ -173,31 +204,73 @@ async function startRecording() {
             }
         };
 
+        mediaRecorder.onerror = (event) => {
+            console.error('MediaRecorder error:', event.error);
+            showError('Recording error occurred');
+            cleanupRecording();
+        };
+
         mediaRecorder.start();
         isRecording = true;
 
         // Update UI - transition from connecting to recording
-        pill.classList.remove('connecting');
+        pill.classList.remove('connecting', 'processing');
         pill.classList.add('recording');
         updateStatusIcon('recording');
         startWaveformAnimation();
 
     } catch (error) {
         console.error('Error starting recording:', error);
-        pill.classList.remove('connecting');
-        showError('Microphone access denied');
+
+        // Clean up on error
+        cleanupRecording();
+
+        pill.classList.remove('connecting', 'recording', 'processing');
+
+        const errorMessage = error.name === 'NotAllowedError'
+            ? 'Microphone access denied'
+            : 'Failed to start recording';
+        showError(errorMessage);
+    }
+}
+
+function cleanupRecording() {
+    isRecording = false;
+    isProcessing = false;
+
+    if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+    }
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        mediaRecorder = null;
     }
 }
 
 function stopRecording() {
+    if (!isRecording) {
+        console.log('Not recording, ignoring stop request');
+        return;
+    }
+
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
+        try {
+            mediaRecorder.stop();
+        } catch (error) {
+            console.error('Error stopping media recorder:', error);
+        }
     }
 
     isRecording = false;
+    isProcessing = true;
 
     // Update UI to processing state
-    pill.classList.remove('recording');
+    pill.classList.remove('recording', 'connecting');
     pill.classList.add('processing');
     updateStatusIcon('processing');
     stopWaveformAnimation();
@@ -271,7 +344,7 @@ function drawWaveform() {
         const y = (pillHeight - barHeight) / 2;
 
         // Draw rounded rectangle (capsule shape)
-        pillCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        pillCtx.fillStyle = 'rgb(255, 255, 255)';
         pillCtx.beginPath();
         pillCtx.roundRect(x, y, barWidth, barHeight, barWidth / 2);
         pillCtx.fill();
@@ -279,11 +352,23 @@ function drawWaveform() {
 }
 
 async function processAudio(audioBlob) {
+    if (!isProcessing) {
+        console.log('Processing flag not set, skipping');
+        return;
+    }
+
     try {
         const apiKey = await window.electronAPI.getApiKey();
 
         if (!apiKey) {
             showError('API key required');
+            resetPill();
+            return;
+        }
+
+        // Validate audio blob
+        if (!audioBlob || audioBlob.size === 0) {
+            showError('No audio recorded');
             resetPill();
             return;
         }
@@ -308,27 +393,44 @@ async function processAudio(audioBlob) {
         });
 
         if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
+            const errorText = await response.text().catch(() => 'Unknown error');
+            throw new Error(`API request failed (${response.status}): ${errorText}`);
         }
 
         const transcript = await response.text();
 
-        if (transcript.trim()) {
+        if (transcript && transcript.trim()) {
             // Send transcript to main process
             await window.electronAPI.pasteText(transcript.trim());
             window.electronAPI.processingComplete(transcript.trim());
+        } else {
+            showError('No speech detected');
         }
 
         resetPill();
 
     } catch (error) {
         console.error('Error processing audio:', error);
-        showError('Transcription failed');
+
+        let errorMessage = 'Transcription failed';
+        if (error.message.includes('401')) {
+            errorMessage = 'Invalid API key';
+        } else if (error.message.includes('429')) {
+            errorMessage = 'API rate limit exceeded';
+        } else if (error.message.includes('Network')) {
+            errorMessage = 'Network error';
+        }
+
+        showError(errorMessage);
         resetPill();
     }
 }
 
 function resetPill() {
+    // Reset all state flags
+    isRecording = false;
+    isProcessing = false;
+
     pill.classList.remove('recording', 'processing', 'connecting');
     updateStatusIcon('ready');
     pillCtx.clearRect(0, 0, pillWidth, pillHeight);

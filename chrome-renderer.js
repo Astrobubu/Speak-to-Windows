@@ -60,7 +60,6 @@ async function loadSettings() {
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
             recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
-            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S',
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center'
         };
 
@@ -160,7 +159,6 @@ function setupEventListeners() {
 
 function updateShortcutDisplay() {
     recordShortcut.textContent = currentSettings.recordShortcut || 'Cmd+Shift+R';
-    document.getElementById('window-shortcut').textContent = currentSettings.windowShortcut || 'Cmd+Shift+S';
 }
 
 async function toggleApp() {
@@ -237,27 +235,24 @@ async function loadSettingsValues() {
         const autoPaste = await window.electronAPI.getAutoPaste();
         const autoStart = await window.electronAPI.getSetting('autoStart') || false;
         const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R';
-        const windowShortcut = await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S';
         const language = await window.electronAPI.getSetting('language') || '';
         const pillPosition = await window.electronAPI.getSetting('pillPosition') || 'bottom-center';
-        
+
         // Update form fields
         const apiKeyInput = document.getElementById('api-key');
         const showNotificationsInput = document.getElementById('show-notifications');
         const autoStartInput = document.getElementById('auto-start');
         const recordShortcutInput = document.getElementById('record-shortcut-input');
-        const windowShortcutInput = document.getElementById('window-shortcut-input');
         const languageSelect = document.getElementById('language-select');
         const pillPositionSelect = document.getElementById('pill-position');
-        
+
         if (apiKeyInput) apiKeyInput.value = apiKey;
         if (showNotificationsInput) showNotificationsInput.checked = autoPaste;
         if (autoStartInput) autoStartInput.checked = autoStart;
         if (recordShortcutInput) recordShortcutInput.value = recordShortcut;
-        if (windowShortcutInput) windowShortcutInput.value = windowShortcut;
         if (languageSelect) languageSelect.value = language;
         if (pillPositionSelect) pillPositionSelect.value = pillPosition;
-        
+
     } catch (error) {
         console.error('Error loading settings:', error);
     }
