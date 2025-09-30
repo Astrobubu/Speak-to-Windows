@@ -28,7 +28,10 @@
       "Bash(npm run build-win:*)",
       "Bash(npm run build-mac:*)",
       "Bash(taskkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh release create v1.3.0 --title \"v1.3.0 - Recording Stability & Windows Improvements\" --notes \"$(cat <<''EOF''\n## What''s New in v1.3.0\n\n### 🎯 Major Improvements\n- **Recording Stability**: Added state locking to prevent rapid toggling issues\n- **Windows Pill Visibility**: Dramatically improved pill window visibility on Windows using screen-saver priority level\n- **Enhanced Error Handling**: Better error messages and debouncing throughout the recording flow\n- **Electron 38.2.0**: Updated to the latest Electron version for improved stability and performance\n\n### 🔧 Changes\n- Removed Show/Hide window shortcut for simplified UX (Cmd+Shift+S / Ctrl+Shift+S no longer mapped)\n- Improved state management between recording/processing/connecting states\n- Better audio blob validation before sending to API\n- Fixed pill transparency and visibility issues on Windows\n- Enhanced context-specific error messages (API key, rate limits, network errors)\n\n### 🐛 Bug Fixes\n- Fixed pill window going behind other windows on Windows OS\n- Fixed duplicate recording start/stop commands\n- Fixed MediaRecorder error handling\n- Improved cleanup on recording errors\n\n### 📦 Installation\nDownload the appropriate installer for your platform below.\n\n**Windows**: `Voice-to-Text-1.3.0-x64.exe` (installer) or `Voice-to-Text-1.3.0-portable.exe` (portable)\n**macOS**: `Voice-to-Text-1.3.0-arm64.dmg` (Apple Silicon) or `Voice-to-Text-1.3.0-x64.dmg` (Intel)\n\n---\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\")"
     ]
   },
   "enableAllProjectMcpServers": true,
