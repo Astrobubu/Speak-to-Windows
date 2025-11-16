@@ -35,7 +35,7 @@ async function loadSettings() {
             recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
             windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S',
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
-            language: await window.electronAPI.getSetting('language') || ''
+            language: await window.electronAPI.getSetting('language') || 'en'
         };
 
         // Update UI

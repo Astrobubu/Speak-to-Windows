@@ -110,6 +110,7 @@
       "notarize": false,
       "artifactName": "${productName}-${version}-${arch}.${ext}",
       "extendInfo": {
+        "LSUIElement": true,
         "NSMicrophoneUsageDescription": "This app needs microphone access to record and transcribe your voice to text.",
         "NSCameraUsageDescription": "This app does not use the camera."
       },

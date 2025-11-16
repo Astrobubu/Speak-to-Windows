@@ -57,6 +57,8 @@ function createPillWindow() {
     skipTaskbar: true,
     resizable: false,
     transparent: true,
+    backgroundColor: '#00000000', // Fully transparent
+    hasShadow: false, // Remove window shadow
     type: 'toolbar', // Helps ensure it stays on top on some platforms
     webPreferences: {
       nodeIntegration: false,
@@ -67,6 +69,11 @@ function createPillWindow() {
 
   pillWindow.loadFile('pill.html');
   pillWindow.hide(); // Always start hidden
+  
+  // Remove any default styling/vibrancy on macOS
+  if (process.platform === 'darwin') {
+    pillWindow.setBackgroundColor('#00000000');
+  }
 
   // Ensure always on top even when other windows are focused
   // Use 'screen-saver' level for maximum priority on Windows
@@ -179,6 +186,11 @@ function registerShortcuts() {
 }
 
 app.whenReady().then(() => {
+  // Hide app from dock on macOS
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.hide();
+  }
+  
   createMainWindow();
   createPillWindow();
   createTray();

@@ -16,6 +16,12 @@
                     <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
                 </svg>
             </button>
+            <button class="settings-button titlebar-language" id="language-btn" title="UI Language">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
             <button class="settings-button titlebar-help" id="help-btn" title="How to Use">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -43,15 +49,15 @@
             <!-- App Title -->
             <div class="app-title">
                 <img src="logo.png" alt="Voice to Text Logo" class="app-logo">
-                <h1>Voice to Text</h1>
-                <p>Speech Transcription</p>
+                <h1 data-i18n="appTitle">Voice to Text</h1>
+                <p data-i18n="appSubtitle">Speech Transcription</p>
             </div>
 
             <!-- App Control Section -->
             <div class="app-control-section">
                 <!-- Simple Toggle -->
                 <div class="simple-toggle-container">
-                    <span class="toggle-label">Shortcuts Switch</span>
+                    <span class="toggle-label" data-i18n="shortcutsSwitch">Shortcuts Switch</span>
                     <div class="slide-toggle" id="app-toggle">
                         <div class="toggle-track" id="toggle-track">
                             <div class="toggle-thumb" id="toggle-thumb"></div>
@@ -64,7 +70,7 @@
             <div class="shortcuts-info">
                 <div class="shortcut-item">
                     <kbd id="record-shortcut">Cmd+Shift+R</kbd>
-                    <span>Record</span>
+                    <span data-i18n="record">Record</span>
                 </div>
             </div>
 
@@ -74,13 +80,13 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                     </svg>
-                    <span>Tips</span>
+                    <span data-i18n="tips">Tips</span>
                 </div>
                 <div class="tips-content">
-                    <p>• App runs in the background when closed - check your system tray</p>
-                    <p>• Right-click the recording pill for quick actions</p>
-                    <p>• Use global shortcuts even when app is minimized</p>
-                    <p>• Transcribed text is automatically copied to clipboard for pasting</p>
+                    <p data-i18n="tip1">• App runs in the background when closed - check your system tray</p>
+                    <p data-i18n="tip2">• Right-click the recording pill for quick actions</p>
+                    <p data-i18n="tip3">• Use global shortcuts even when app is minimized</p>
+                    <p data-i18n="tip4">• Transcribed text is automatically copied to clipboard for pasting</p>
                 </div>
             </div>
         </div>
@@ -90,7 +96,7 @@
     <div class="modal-overlay" id="tutorial-modal">
         <div class="modal-content tutorial-modal">
             <div class="modal-header">
-                <h3>How to Use Voice to Text</h3>
+                <h3 data-i18n="tutorialTitle">How to Use Voice to Text</h3>
                 <button class="modal-close" id="tutorial-close">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -103,29 +109,29 @@
                     <div class="step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <strong>Start Recording</strong>
-                            <p>Press <kbd>Cmd+Shift+R</kbd> or click the record button. Make sure your microphone is working.</p>
+                            <strong data-i18n="step1Title">Start Recording</strong>
+                            <p>Press <kbd>Cmd+Shift+R</kbd> <span data-i18n="step1Text">or click the record button. Make sure your microphone is working.</span></p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <strong>Speak Clearly</strong>
-                            <p>Talk normally into your microphone. You'll see a waveform visualization showing your voice input.</p>
+                            <strong data-i18n="step2Title">Speak Clearly</strong>
+                            <p data-i18n="step2Text">Talk normally into your microphone. You'll see a waveform visualization showing your voice input.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <strong>Finish Recording</strong>
-                            <p>Press <kbd>Cmd+Shift+R</kbd> again or click the stop button to end recording.</p>
+                            <strong data-i18n="step3Title">Finish Recording</strong>
+                            <p>Press <kbd>Cmd+Shift+R</kbd> <span data-i18n="step3Text">again or click the stop button to end recording.</span></p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <strong>Text Ready!</strong>
-                            <p>Your speech is automatically transcribed and saved to clipboard. Just press <kbd>Cmd+V</kbd> to paste anywhere!</p>
+                            <strong data-i18n="step4Title">Text Ready!</strong>
+                            <p><span data-i18n="step4Text">Your speech is automatically transcribed and saved to clipboard. Just press</span> <kbd>Cmd+V</kbd> <span data-i18n="step4Text2">to paste anywhere!</span></p>
                         </div>
                     </div>
                 </div>
@@ -134,7 +140,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                         </svg>
-                        <span>Configure your OpenAI API key in settings to enable transcription</span>
+                        <span data-i18n="tutorialTip">Configure your OpenAI API key in settings to enable transcription</span>
                     </div>
                 </div>
             </div>
@@ -142,9 +148,35 @@
                 <label class="checkbox-label">
                     <input type="checkbox" id="dont-show-again">
                     <span class="checkmark"></span>
-                    <span>Don't show this again</span>
+                    <span data-i18n="dontShowAgain">Don't show this again</span>
                 </label>
-                <button class="btn-primary" id="tutorial-got-it">Got it!</button>
+                <button class="btn-primary" id="tutorial-got-it" data-i18n="gotIt">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Selection Modal -->
+    <div class="modal-overlay" id="language-modal">
+        <div class="modal-content language-modal" style="max-width: 350px;">
+            <div class="modal-header">
+                <h3 data-i18n="selectUILanguage">Select UI Language</h3>
+                <button class="modal-close" id="language-close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <select id="quick-language-select" style="width: 100%; padding: 8px;">
+                        <option value="en" data-i18n-option="english">English</option>
+                        <option value="ar" data-i18n-option="arabic">Arabic</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="save-language" data-i18n="saveLanguage" style="width: 100%;">Save Language</button>
             </div>
         </div>
     </div>
@@ -195,12 +227,12 @@
                     </div>
                 </div>
 
-                <!-- Language -->
+                <!-- Transcription Language -->
                 <div class="setting-group">
-                    <label for="language-select">Language</label>
+                    <label for="language-select">Transcription Language</label>
                     <select id="language-select">
-                        <option value="">Auto-detect</option>
                         <option value="en">English</option>
+                        <option value="ar">Arabic</option>
                         <option value="es">Spanish</option>
                         <option value="fr">French</option>
                         <option value="de">German</option>
@@ -210,7 +242,6 @@
                         <option value="ja">Japanese</option>
                         <option value="ko">Korean</option>
                         <option value="zh">Chinese</option>
-                        <option value="ar">Arabic</option>
                         <option value="hi">Hindi</option>
                         <option value="ur">Urdu</option>
                         <option value="tr">Turkish</option>
@@ -242,6 +273,7 @@
     </div>
 
 
+    <script src="translations.js"></script>
     <script src="chrome-renderer.js"></script>
 </body>
 </html>

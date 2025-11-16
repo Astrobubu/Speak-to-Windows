@@ -89,6 +89,28 @@ body.loaded {
   color: var(--text-primary);
 }
 
+.titlebar-language {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  -webkit-app-region: no-drag;
+  margin-left: 4px;
+  margin-top: 14px;
+}
+
+.titlebar-language:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 .titlebar-help {
   width: 28px;
   height: 28px;
@@ -889,4 +911,28 @@ kbd {
 @keyframes pulse-btn {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* Language-specific text alignment (no RTL flip) */
+.app-title,
+.app-title h1,
+.app-title p,
+.modal-header h3,
+.shortcuts-info,
+.simple-toggle-container {
+  text-align: center !important;
+}
+
+.tips-section,
+.tips-content p,
+.step-content p,
+.tutorial-tip {
+  text-align: left !important;
+}
+
+/* Ensure buttons stay centered */
+.btn-primary,
+.btn-secondary,
+.modal-footer {
+  text-align: center !important;
 }

@@ -1,12 +1,14 @@
 let isAppEnabled = false;
 let isRecording = false;
 let currentSettings = {};
+let currentLanguage = 'en';
 
 // DOM elements - will be initialized in DOMContentLoaded
 let appToggle, toggleTrack, toggleThumb, recordShortcut;
-let settingsBtn, helpBtn, minimizeBtn, closeBtn;
+let settingsBtn, languageBtn, helpBtn, minimizeBtn, closeBtn;
 let tutorialModal, tutorialClose, tutorialGotIt, dontShowAgain;
 let settingsModal, settingsClose, saveSettings, cancelSettings;
+let languageModal, languageClose, saveLanguage, quickLanguageSelect;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -17,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     recordShortcut = document.getElementById('record-shortcut');
     
     settingsBtn = document.getElementById('settings-btn');
+    languageBtn = document.getElementById('language-btn');
     helpBtn = document.getElementById('help-btn');
     minimizeBtn = document.getElementById('minimize-btn');
     closeBtn = document.getElementById('close-btn');
@@ -32,6 +35,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     settingsClose = document.getElementById('settings-close');
     saveSettings = document.getElementById('save-settings');
     cancelSettings = document.getElementById('cancel-settings');
+    
+    // Language modal elements
+    languageModal = document.getElementById('language-modal');
+    languageClose = document.getElementById('language-close');
+    saveLanguage = document.getElementById('save-language');
+    quickLanguageSelect = document.getElementById('quick-language-select');
     
     // Add loaded class to prevent flash
     document.body.classList.add('loaded');
@@ -50,7 +59,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initial window size adjustment
     setTimeout(adjustWindowSize, 100);
+    
+    // Load and apply UI language
+    await loadUILanguage();
 });
+
+// Translation System
+async function loadUILanguage() {
+    try {
+        const savedLanguage = await window.electronAPI.getSetting('uiLanguage') || 'en';
+        currentLanguage = savedLanguage;
+        applyTranslations(currentLanguage);
+    } catch (error) {
+        console.error('Error loading UI language:', error);
+        currentLanguage = 'en';
+        applyTranslations('en');
+    }
+}
+
+function applyTranslations(lang) {
+    if (!translations || !translations[lang]) {
+        console.error('Translations not found for language:', lang);
+        return;
+    }
+    
+    const t = translations[lang];
+    
+    // Translate all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (t[key]) {
+            element.textContent = t[key];
+        }
+    });
+    
+    // Translate option elements
+    document.querySelectorAll('[data-i18n-option]').forEach(option => {
+        const key = option.getAttribute('data-i18n-option');
+        if (t[key]) {
+            option.textContent = t[key];
+        }
+    });
+    
+    // Translate title attributes (tooltips)
+    const settingsBtn = document.getElementById('settings-btn');
+    const languageBtn = document.getElementById('language-btn');
+    const helpBtn = document.getElementById('help-btn');
+    
+    if (settingsBtn) settingsBtn.setAttribute('title', t.settingsTooltip || 'Settings');
+    if (languageBtn) languageBtn.setAttribute('title', t.languageTooltip || 'UI Language');
+    if (helpBtn) helpBtn.setAttribute('title', t.helpTooltip || 'How to Use');
+    
+    currentLanguage = lang;
+}
 
 async function loadSettings() {
     try {
@@ -60,7 +121,8 @@ async function loadSettings() {
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
             recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
-            pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center'
+            pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
+            transcriptionLanguage: await window.electronAPI.getSetting('language') || 'en'
         };
 
         // Note: UI updates for settings will be handled in settings window
@@ -90,6 +152,11 @@ function setupEventListeners() {
     // Settings button
     if (settingsBtn) {
         settingsBtn.addEventListener('click', showSettings);
+    }
+    
+    // Language button
+    if (languageBtn) {
+        languageBtn.addEventListener('click', showLanguageModal);
     }
     
     // Help button
@@ -132,6 +199,23 @@ function setupEventListeners() {
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 hideSettings();
+            }
+        });
+    }
+    
+    // Language modal events
+    if (languageClose) {
+        languageClose.addEventListener('click', hideLanguageModal);
+    }
+    if (saveLanguage) {
+        saveLanguage.addEventListener('click', handleLanguageSave);
+    }
+    
+    // Close language modal when clicking outside
+    if (languageModal) {
+        languageModal.addEventListener('click', (e) => {
+            if (e.target === languageModal) {
+                hideLanguageModal();
             }
         });
     }
@@ -235,7 +319,7 @@ async function loadSettingsValues() {
         const autoPaste = await window.electronAPI.getAutoPaste();
         const autoStart = await window.electronAPI.getSetting('autoStart') || false;
         const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R';
-        const language = await window.electronAPI.getSetting('language') || '';
+        const language = await window.electronAPI.getSetting('language') || 'en';
         const pillPosition = await window.electronAPI.getSetting('pillPosition') || 'bottom-center';
 
         // Update form fields
@@ -341,5 +425,47 @@ async function handleTutorialClose() {
     } catch (error) {
         console.error('Error saving tutorial settings:', error);
         hideTutorial();
+    }
+}
+
+// Language Modal Functions
+async function showLanguageModal() {
+    if (languageModal) {
+        // Load current UI language setting
+        const currentLanguage = await window.electronAPI.getSetting('uiLanguage') || 'en';
+        if (quickLanguageSelect) {
+            quickLanguageSelect.value = currentLanguage;
+        }
+        languageModal.classList.add('show');
+    }
+}
+
+function hideLanguageModal() {
+    if (languageModal) {
+        languageModal.classList.remove('show');
+    }
+}
+
+async function handleLanguageSave() {
+    try {
+        const selectedLanguage = quickLanguageSelect.value;
+        
+        // Save UI language setting
+        await window.electronAPI.setSetting('uiLanguage', selectedLanguage);
+        
+        // Apply translations immediately
+        applyTranslations(selectedLanguage);
+        
+        // Hide modal
+        hideLanguageModal();
+        
+        // Show success notification with translated text
+        const t = translations[selectedLanguage];
+        showNotificationIfEnabled(t.languageUpdated, t.languageUpdatedMsg);
+        
+    } catch (error) {
+        console.error('Error saving UI language:', error);
+        const t = translations[currentLanguage] || translations['en'];
+        showNotificationIfEnabled(t.error, t.errorSavingLanguage);
     }
 }
