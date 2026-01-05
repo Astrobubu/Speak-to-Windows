@@ -1,101 +1,174 @@
+<div align="center">
+
+![Speak to Windows - Speech to Text from a Shortcut](Speech%20to%20Text%20with%20a%20shortcut.jpg)
+
 # Speak to Windows 🎤
 
-A cross-platform speech-to-text application that uses OpenAI's Whisper API to transcribe your voice with real-time waveform visualization and automatic pasting functionality.
+**Transform your voice into text with a simple keyboard shortcut**
 
-## Features
+Powered by OpenAI's Whisper API for accurate, real-time speech-to-text transcription
 
-- 🎙️ **Real-time Audio Recording** with waveform visualization
-- 🔄 **OpenAI Whisper Integration** for accurate transcription
-- 📱 **Floating Pill Interface** - Always-on-top recording indicator
-- 📋 **Auto-paste** transcription where your cursor is
-- ⚡ **Global Hotkeys** for quick recording
-- 🖥️ **Cross-platform** - Works on Windows and Mac
-- 🎨 **Modern UI** with dark/light support
+<br>
 
-## Global Shortcuts
+[![Download Latest Release](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Astrobubu/Speak-to-Windows/releases/latest)
 
-- `Ctrl+Shift+R` (Windows) / `Cmd+Shift+R` (Mac) - Start/Stop Recording
-- `Ctrl+Shift+S` (Windows) / `Cmd+Shift+S` (Mac) - Show/Hide Main Window
+<br>
 
-## Installation
+</div>
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+---
 
-2. **Set your OpenAI API Key:**
-   - Launch the app
-   - Enter your OpenAI API key in the settings
-   - The key is stored locally and securely
+## ✨ Features
 
-3. **Run the application:**
-   ```bash
-   npm start
-   ```
+🎙️ **One-Click Recording** - Press a hotkey, speak, and get instant text
+📋 **Auto-Paste Anywhere** - Transcribed text appears right where you need it
+🌊 **Real-Time Waveform** - See your voice visualized as you speak
+💊 **Floating Pill UI** - Unobtrusive recording indicator stays on top
+⚡ **Lightning Fast** - Powered by OpenAI's Whisper for accurate results
+🖥️ **Cross-Platform** - Works seamlessly on Windows and macOS
 
-## Building
+---
 
-Build for your current platform:
+## 🚀 Quick Start
+
+### 1. Download & Install
+
+Download the latest version for your platform:
+
+- **Windows**: Download the `.exe` installer
+- **macOS**: Download the `.dmg` file
+
+👉 **[Get the Latest Release](https://github.com/Astrobubu/Speak-to-Windows/releases/latest)**
+
+### 2. Get Your OpenAI API Key
+
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Create an account or sign in
+3. Generate a new API key
+4. Copy the key (you'll need it in the next step)
+
+### 3. Configure the App
+
+1. Launch Speak to Windows
+2. Open settings
+3. Paste your OpenAI API key
+4. You're ready to go!
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Action | Windows | macOS |
+|--------|---------|-------|
+| **Start/Stop Recording** | `Ctrl+Shift+R` | `Cmd+Shift+R` |
+| **Show/Hide Window** | `Ctrl+Shift+S` | `Cmd+Shift+S` |
+
+*Shortcuts can be customized in settings*
+
+---
+
+## 🎯 How to Use
+
+1. **Press the recording hotkey** (`Ctrl+Shift+R` on Windows, `Cmd+Shift+R` on Mac)
+2. **Speak clearly** into your microphone - watch the waveform react!
+3. **Press the hotkey again** to stop recording
+4. **Your text appears** automatically where your cursor is (or copies to clipboard)
+
+That's it! No menus, no clicking - just speak and go.
+
+---
+
+## 🔒 Privacy & Security
+
+- ✅ Your API key is stored **encrypted** on your device only
+- ✅ Audio is sent **only** to OpenAI for transcription
+- ✅ **No recordings** are saved unless you choose to
+- ✅ **No tracking** or analytics
+- ✅ Completely **open source** - inspect the code yourself
+
+---
+
+## 💡 Use Cases
+
+- 📝 **Quick note-taking** during meetings
+- ✉️ **Dictate emails** faster than typing
+- 📱 **Message friends** without touching the keyboard
+- 🎓 **Transcribe lectures** or interviews
+- ♿ **Accessibility** for hands-free computing
+- 🌍 **Multilingual support** via Whisper's language detection
+
+---
+
+## ⚙️ System Requirements
+
+- **Windows 10/11** or **macOS 10.13+**
+- **Microphone** (built-in or external)
+- **Internet connection** (for OpenAI API)
+- **OpenAI API key** ([Get one free](https://platform.openai.com/api-keys))
+
+---
+
+## 🛠️ Troubleshooting
+
+### Microphone not working?
+- Check your system microphone permissions
+- Make sure no other app is blocking the microphone
+
+### Recording not starting?
+- Verify your OpenAI API key is entered correctly
+- Check your internet connection
+- Ensure you have API credits available
+
+### Text not pasting?
+- Toggle "Auto-paste" in settings
+- Some apps may block automated pasting - try clipboard mode instead
+
+---
+
+## 🧑‍💻 For Developers
+
+Want to build from source or contribute?
+
+### Install Dependencies
 ```bash
-npm run build
+npm install
 ```
 
-Build for specific platforms:
+### Run in Development
 ```bash
-npm run build-win  # Windows
-npm run build-mac  # macOS
+npm start
 ```
 
-## How It Works
+### Build for Your Platform
+```bash
+npm run build        # Current platform
+npm run build-win    # Windows
+npm run build-mac    # macOS
+```
 
-1. **Recording**: Click the record button or use the global hotkey to start recording
-2. **Visualization**: See real-time waveform in both the main window and floating pill
-3. **Transcription**: Audio is automatically sent to OpenAI's Whisper API when recording stops
-4. **Pasting**: Transcribed text is either auto-pasted at cursor location or copied to clipboard
+See [CLAUDE.md](CLAUDE.md) for detailed architecture and development information.
 
-## Requirements
+---
 
-- **OpenAI API Key** - Get one from [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Microphone permissions** - The app will request access when first used
-- **Internet connection** - Required for Whisper API calls
+## 📄 License
 
-## Configuration
+MIT License - See [LICENSE](LICENSE) for details
 
-The app stores your preferences locally:
-- API key (encrypted)
-- Auto-paste settings
-- Window positions
+---
 
-## Troubleshooting
+## 🙏 Credits
 
-**Microphone not working:**
-- Check system microphone permissions
-- Ensure no other app is using the microphone
+- **Whisper API** by [OpenAI](https://openai.com)
+- Built with [Electron](https://www.electronjs.org/)
+- Waveform visualization using Web Audio API
 
-**API errors:**
-- Verify your OpenAI API key is correct
-- Check your API usage limits
-- Ensure stable internet connection
+---
 
-**Recording not starting:**
-- Try refreshing the app
-- Check microphone permissions in system settings
+<div align="center">
 
-## Privacy & Security
+**Made with ❤️ for faster, easier communication**
 
-- Audio is only sent to OpenAI's servers for transcription
-- API keys are stored locally using encrypted storage
-- No audio is saved locally unless you choose to export
-- Transcripts are only stored in memory and clipboard
+[![GitHub Stars](https://img.shields.io/github/stars/Astrobubu/Speak-to-Windows?style=social)](https://github.com/Astrobubu/Speak-to-Windows)
+[![GitHub Issues](https://img.shields.io/github/issues/Astrobubu/Speak-to-Windows)](https://github.com/Astrobubu/Speak-to-Windows/issues)
 
-## Tech Stack
-
-- **Electron** - Cross-platform desktop framework
-- **Web Audio API** - Real-time audio processing
-- **OpenAI Whisper API** - Speech-to-text transcription
-- **HTML5/CSS3/JavaScript** - Modern web technologies
-
-## License
-
-MIT License - see LICENSE file for details
+</div>
