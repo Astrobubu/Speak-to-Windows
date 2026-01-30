@@ -46,7 +46,6 @@
     "icon": "icon.icns",
     "files": [
       "**/*",
-      "whisper-to-text/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
       "!node_modules/*.d.ts",
@@ -60,8 +59,7 @@
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
       "!dist/**/*",
       "!build/**/*",
-      "!whisper-to-text/venv/**/__pycache__/**/*",
-      "!whisper-to-text/whisperX/**/*"
+      "!whisper-to-text/**/*"
     ],
     "win": {
       "target": [
