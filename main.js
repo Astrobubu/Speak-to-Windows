@@ -1,8 +1,27 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, clipboard, screen, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, clipboard, screen, Tray, Menu, nativeImage, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+// Set cache and temp paths to D: drive to avoid C: drive access issues
+const cacheDir = 'D:\\Temp\\speak-to-windows';
+if (!fs.existsSync(cacheDir)) {
+  fs.mkdirSync(cacheDir, { recursive: true });
+}
+app.setPath('cache', cacheDir);
+app.setPath('temp', cacheDir);
+app.setPath('crashDumps', path.join(cacheDir, 'crashes'));
+app.setPath('logs', path.join(cacheDir, 'logs'));
+
+// Disable GPU cache to avoid permission errors
+app.commandLine.appendSwitch('disk-cache-dir', path.join(cacheDir, 'cache'));
+app.commandLine.appendSwitch('gpu-cache-dir', path.join(cacheDir, 'gpu-cache'));
+
 const Store = require('electron-store');
+const { WhisperLauncher } = require('./whisper-to-text/launcher');
 
 const store = new Store();
+const whisperLauncher = new WhisperLauncher();
+let whisperServerStarting = false;
 
 let mainWindow;
 let pillWindow;
@@ -185,7 +204,7 @@ function registerShortcuts() {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Hide app from dock on macOS
   if (process.platform === 'darwin' && app.dock) {
     app.dock.hide();
@@ -198,6 +217,16 @@ app.whenReady().then(() => {
   
   // Load app enabled state
   isAppEnabled = store.get('appEnabled', false);
+
+  // Sync auto-start setting with system login item
+  const autoStart = store.get('autoStart', false);
+  app.setLoginItemSettings({
+    openAtLogin: autoStart,
+    path: app.getPath('exe')
+  });
+
+  // Auto-start WhisperX server if local mode is enabled
+  autoStartWhisperServer();
 });
 
 app.on('window-all-closed', () => {
@@ -220,6 +249,64 @@ app.on('before-quit', () => {
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
 });
+
+// Stop WhisperX server when app quits
+app.on('before-quit', async () => {
+  console.log('[App] Stopping WhisperX server...');
+  whisperLauncher.stop();
+});
+
+/**
+ * Auto-start Whisper server in background if local mode is enabled
+ */
+function autoStartWhisperServer() {
+  const localMode = store.get('localMode', false);
+
+  if (!localMode) {
+    console.log('[App] Local mode OFF');
+    return;
+  }
+
+  console.log('[App] Starting local Whisper server in background...');
+  whisperServerStarting = true;
+
+  // Start in background - don't block the app
+  whisperLauncher.start({
+    model: store.get('whisperModel', 'base'),
+    device: store.get('whisperDevice', 'cpu')
+  }).then(result => {
+    console.log('[App] Whisper server ready!');
+    whisperServerStarting = false;
+
+    // Notify user server is ready
+    const { Notification } = require('electron');
+    new Notification({
+      title: 'Local Whisper Ready',
+      body: 'Voice transcription is ready to use!',
+      silent: true
+    }).show();
+
+  }).catch(error => {
+    console.error('[App] Whisper server failed:', error.message);
+    whisperServerStarting = false;
+  });
+}
+
+/**
+ * Toggle Whisper server based on local mode setting
+ */
+function toggleWhisperServer(enable) {
+  if (enable) {
+    if (whisperServerStarting) {
+      console.log('[App] Server already starting...');
+      return;
+    }
+    autoStartWhisperServer();
+  } else {
+    console.log('[App] Stopping WhisperX server (local mode disabled)');
+    whisperLauncher.stop();
+  }
+}
 
 let recordingLock = false;
 
@@ -327,16 +414,18 @@ ipcMain.handle('copy-to-clipboard', (event, text) => {
 });
 
 ipcMain.handle('paste-text', async (event, text) => {
+  console.log('[Main] paste-text received:', text?.substring(0, 100));
   const autoPaste = store.get('auto-paste', true);
 
   // Always copy to clipboard
   clipboard.writeText(text);
+  console.log('[Main] Text copied to clipboard, length:', text?.length);
 
   if (autoPaste) {
     // Show notification that text is ready to paste
     const notification = new require('electron').Notification({
       title: 'Transcription Ready',
-      body: 'Text copied to clipboard. Press Cmd+V to paste.',
+      body: text?.substring(0, 50) + '...',
       silent: true
     });
     notification.show();
@@ -370,6 +459,16 @@ ipcMain.handle('get-setting', (event, key) => {
 
 ipcMain.handle('set-setting', (event, key, value) => {
   store.set(key, value);
+
+  // Handle autoStart setting - set system login item
+  if (key === 'autoStart') {
+    app.setLoginItemSettings({
+      openAtLogin: value,
+      path: app.getPath('exe')
+    });
+    console.log('[Settings] Auto-start set to:', value);
+  }
+
   return true;
 });
 
@@ -422,5 +521,35 @@ ipcMain.handle('get-app-enabled', () => {
 ipcMain.handle('set-app-enabled', (event, enabled) => {
   isAppEnabled = enabled;
   store.set('appEnabled', enabled);
+  return true;
+});
+
+// Handle WhisperX server status
+ipcMain.handle('get-whisperx-status', async () => {
+  return await whisperLauncher.getStatus();
+});
+
+ipcMain.handle('start-whisperx-server', async () => {
+  try {
+    const result = await whisperLauncher.start({
+      model: store.get('whisperModel', 'base'),
+      device: store.get('whisperDevice', 'cpu'),
+      computeType: store.get('whisperComputeType', 'int8')
+    });
+    return { success: true, message: result.message };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('stop-whisperx-server', async () => {
+  whisperLauncher.stop();
+  return { success: true };
+});
+
+// Handle local mode toggle
+ipcMain.handle('set-local-mode', async (event, enabled) => {
+  store.set('localMode', enabled);
+  toggleWhisperServer(enabled);
   return true;
 });

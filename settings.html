@@ -94,7 +94,7 @@
                 <label class="checkbox-label">
                     <input type="checkbox" id="auto-start">
                     <span class="checkmark"></span>
-                    Start with macOS
+                    <span class="os-name">Start with Windows</span>
                 </label>
             </div>
 
@@ -102,7 +102,7 @@
             <div class="setting-group">
                 <label for="record-shortcut-input">Recording Shortcut</label>
                 <div class="shortcut-input-container">
-                    <input type="text" id="record-shortcut-input" placeholder="Cmd+Shift+R" readonly>
+                    <input type="text" id="record-shortcut-input" placeholder="Ctrl+Shift+R" readonly>
                     <button class="change-shortcut" id="change-record-shortcut" data-target="record-shortcut-input">Change</button>
                 </div>
             </div>
@@ -144,6 +144,39 @@
                     <option value="top-right">Top Right</option>
                 </select>
             </div>
+
+            <!-- Local Mode Section -->
+            <div class="settings-section">
+                <h2 class="section-title">Local Whisper (CPU)</h2>
+
+                <div class="setting-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="local-mode">
+                        <span class="checkmark"></span>
+                        Use local WhisperX (offline, no API key)
+                    </label>
+                </div>
+
+                <div id="local-mode-options" class="local-mode-options hidden">
+                    <div class="setting-group">
+                        <label for="whisper-model">Model</label>
+                        <select id="whisper-model">
+                            <option value="base">Base (recommended)</option>
+                            <option value="tiny">Tiny (fastest)</option>
+                            <option value="small">Small</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group server-status">
+                        <div class="status-row">
+                            <span id="server-status-indicator" class="status-indicator offline"></span>
+                            <span id="server-status-text">Server offline</span>
+                            <button id="toggle-server-btn" class="btn-small">Start</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Settings Actions -->

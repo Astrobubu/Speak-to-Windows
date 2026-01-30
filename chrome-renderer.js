@@ -3,6 +3,35 @@ let isRecording = false;
 let currentSettings = {};
 let currentLanguage = 'en';
 
+// Platform-specific labels
+const modKey = window.electronAPI?.modKey || 'Ctrl';
+const osName = window.electronAPI?.osName || 'Windows';
+
+/**
+ * Update all OS-specific labels in the UI
+ */
+function updateOSLabels() {
+    // Update "Start with OS" labels
+    document.querySelectorAll('.os-name').forEach(el => {
+        el.textContent = `Start with ${osName}`;
+    });
+
+    // Update shortcut keys (Cmd -> Ctrl or vice versa)
+    document.querySelectorAll('.shortcut-key').forEach(el => {
+        el.textContent = el.textContent.replace(/Cmd|Ctrl/, modKey);
+    });
+
+    // Update paste keys
+    document.querySelectorAll('.paste-key').forEach(el => {
+        el.textContent = `${modKey}+V`;
+    });
+
+    // Update input placeholders
+    document.querySelectorAll('input[placeholder*="Cmd"], input[placeholder*="Ctrl"]').forEach(el => {
+        el.placeholder = el.placeholder.replace(/Cmd|Ctrl/, modKey);
+    });
+}
+
 // DOM elements - will be initialized in DOMContentLoaded
 let appToggle, toggleTrack, toggleThumb, recordShortcut;
 let settingsBtn, languageBtn, helpBtn, minimizeBtn, closeBtn;
@@ -44,7 +73,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Add loaded class to prevent flash
     document.body.classList.add('loaded');
-    
+
+    // Update OS-specific labels (Cmd/Ctrl, macOS/Windows)
+    updateOSLabels();
+
     await loadSettings();
     setupEventListeners();
     updateShortcutDisplay();
@@ -120,15 +152,37 @@ async function loadSettings() {
             apiKey: await window.electronAPI.getApiKey() || '',
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
-            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
+            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || `${modKey}+Shift+R`,
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
-            transcriptionLanguage: await window.electronAPI.getSetting('language') || 'en'
+            transcriptionLanguage: await window.electronAPI.getSetting('language') || 'en',
+            localMode: await window.electronAPI.getSetting('localMode') || false
         };
+
+        // Update local mode UI
+        updateLocalModeUI();
 
         // Note: UI updates for settings will be handled in settings window
 
     } catch (error) {
         console.error('Error loading settings:', error);
+    }
+}
+
+function updateLocalModeUI() {
+    const badge = document.getElementById('local-mode-badge');
+    const text = document.getElementById('local-mode-text');
+    const desc = document.getElementById('local-mode-description');
+    
+    if (badge && text && desc) {
+        if (currentSettings.localMode) {
+            badge.className = 'local-mode-badge offline';
+            text.textContent = 'Local Mode: ON';
+            desc.textContent = 'Using local WhisperX (offline, no API key needed)';
+        } else {
+            badge.className = 'local-mode-badge online';
+            text.textContent = 'Local Mode: OFF';
+            desc.textContent = 'Using OpenAI API for transcription';
+        }
     }
 }
 
@@ -242,17 +296,18 @@ function setupEventListeners() {
 }
 
 function updateShortcutDisplay() {
-    recordShortcut.textContent = currentSettings.recordShortcut || 'Cmd+Shift+R';
+    recordShortcut.textContent = currentSettings.recordShortcut || `${modKey}+Shift+R`;
 }
 
 async function toggleApp() {
-    // Load current API key to make sure we have it
+    // Load current settings
     const apiKey = await window.electronAPI.getApiKey();
+    const localMode = await window.electronAPI.getSetting('localMode') || false;
 
-    // Check API key first
-    if (!isAppEnabled && !apiKey) {
+    // Check API key only if not in local mode
+    if (!isAppEnabled && !localMode && !apiKey) {
         openSettings();
-        showNotificationIfEnabled('Setup required', 'Please set your OpenAI API key first');
+        showNotificationIfEnabled('Setup required', 'Please set your OpenAI API key first, or enable Local Mode');
         return;
     }
 
@@ -318,9 +373,10 @@ async function loadSettingsValues() {
         const apiKey = await window.electronAPI.getApiKey();
         const autoPaste = await window.electronAPI.getAutoPaste();
         const autoStart = await window.electronAPI.getSetting('autoStart') || false;
-        const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R';
+        const recordShortcut = await window.electronAPI.getSetting('shortcuts.record') || `${modKey}+Shift+R`;
         const language = await window.electronAPI.getSetting('language') || 'en';
         const pillPosition = await window.electronAPI.getSetting('pillPosition') || 'bottom-center';
+        const localMode = await window.electronAPI.getSetting('localMode') || false;
 
         // Update form fields
         const apiKeyInput = document.getElementById('api-key');
@@ -329,6 +385,7 @@ async function loadSettingsValues() {
         const recordShortcutInput = document.getElementById('record-shortcut-input');
         const languageSelect = document.getElementById('language-select');
         const pillPositionSelect = document.getElementById('pill-position');
+        const localModeToggle = document.getElementById('local-mode-toggle');
 
         if (apiKeyInput) apiKeyInput.value = apiKey;
         if (showNotificationsInput) showNotificationsInput.checked = autoPaste;
@@ -336,6 +393,7 @@ async function loadSettingsValues() {
         if (recordShortcutInput) recordShortcutInput.value = recordShortcut;
         if (languageSelect) languageSelect.value = language;
         if (pillPositionSelect) pillPositionSelect.value = pillPosition;
+        if (localModeToggle) localModeToggle.checked = localMode;
 
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -350,6 +408,8 @@ async function handleSettingsSave() {
         const autoStart = document.getElementById('auto-start').checked;
         const language = document.getElementById('language-select').value;
         const pillPosition = document.getElementById('pill-position').value;
+        const localMode = document.getElementById('local-mode-toggle').checked;
+        const previousLocalMode = currentSettings.localMode;
         
         // Save settings
         await window.electronAPI.setApiKey(apiKey);
@@ -357,6 +417,12 @@ async function handleSettingsSave() {
         await window.electronAPI.setSetting('autoStart', autoStart);
         await window.electronAPI.setSetting('language', language);
         await window.electronAPI.setSetting('pillPosition', pillPosition);
+        await window.electronAPI.setSetting('localMode', localMode);
+        
+        // Notify main process about local mode change (to start/stop server)
+        if (localMode !== previousLocalMode) {
+            await window.electronAPI.setLocalMode(localMode);
+        }
         
         // Update current settings
         await loadSettings();
@@ -365,7 +431,10 @@ async function handleSettingsSave() {
         hideSettings();
         
         // Show success notification
-        showNotificationIfEnabled('Settings saved', 'Your settings have been updated successfully');
+        const message = localMode 
+            ? 'Local mode enabled - no API key needed!' 
+            : 'Your settings have been updated successfully';
+        showNotificationIfEnabled('Settings saved', message);
         
     } catch (error) {
         console.error('Error saving settings:', error);

@@ -1,6 +1,17 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// Platform detection
+const isMac = process.platform === 'darwin';
+const isWindows = process.platform === 'win32';
+const platform = process.platform;
+
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Platform info
+  platform: platform,
+  isMac: isMac,
+  isWindows: isWindows,
+  modKey: isMac ? 'Cmd' : 'Ctrl',
+  osName: isMac ? 'macOS' : isWindows ? 'Windows' : 'Linux',
   // Settings
   getApiKey: () => ipcRenderer.invoke('get-api-key'),
   setApiKey: (apiKey) => ipcRenderer.invoke('set-api-key', apiKey),
@@ -47,5 +58,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   processingComplete: (transcript) => ipcRenderer.send('processing-complete', transcript),
   
   // Refresh shortcuts
-  refreshShortcuts: () => ipcRenderer.send('refresh-shortcuts')
+  refreshShortcuts: () => ipcRenderer.send('refresh-shortcuts'),
+  
+  // WhisperX Server controls
+  getWhisperXStatus: () => ipcRenderer.invoke('get-whisperx-status'),
+  startWhisperXServer: () => ipcRenderer.invoke('start-whisperx-server'),
+  stopWhisperXServer: () => ipcRenderer.invoke('stop-whisperx-server'),
+  setLocalMode: (enabled) => ipcRenderer.invoke('set-local-mode', enabled)
 });

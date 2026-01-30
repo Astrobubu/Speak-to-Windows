@@ -358,13 +358,9 @@ async function processAudio(audioBlob) {
     }
 
     try {
-        const apiKey = await window.electronAPI.getApiKey();
-
-        if (!apiKey) {
-            showError('API key required');
-            resetPill();
-            return;
-        }
+        // Check if local mode is enabled
+        const localMode = await window.electronAPI.getSetting('localMode') || false;
+        console.log('[Pill] Local mode:', localMode, 'Audio size:', audioBlob?.size);
 
         // Validate audio blob
         if (!audioBlob || audioBlob.size === 0) {
@@ -373,34 +369,90 @@ async function processAudio(audioBlob) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'recording.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('response_format', 'text');
+        let transcript = '';
 
-        // Add language if set
-        const language = await window.electronAPI.getSetting('language');
-        if (language) {
-            formData.append('language', language);
+        if (localMode) {
+            // LOCAL MODE - Use local Whisper server
+            console.log('[Pill] Using LOCAL mode');
+
+            // Check if server is ready
+            try {
+                const health = await fetch('http://127.0.0.1:8000/health', { method: 'GET', signal: AbortSignal.timeout(2000) });
+                if (!health.ok) throw new Error('Not ready');
+            } catch (e) {
+                console.log('[Pill] Server not ready yet, waiting...');
+                showError('Loading model...');
+                resetPill();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.webm');
+
+            const language = await window.electronAPI.getSetting('language');
+            if (language) {
+                formData.append('language', language);
+            }
+
+            console.log('[Pill] Sending', audioBlob.size, 'bytes to local server...');
+            const response = await fetch('http://127.0.0.1:8000/transcribe', {
+                method: 'POST',
+                body: formData
+            });
+
+            console.log('[Pill] Response status:', response.status);
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error('[Pill] Server error:', errText);
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('[Pill] Result:', JSON.stringify(result));
+            transcript = result.text || '';
+
+            if (!transcript) {
+                console.log('[Pill] Empty transcript, might be silence or no speech');
+            }
+
+        } else {
+            // OPENAI MODE - Use OpenAI API
+            const apiKey = await window.electronAPI.getApiKey();
+
+            if (!apiKey) {
+                showError('API key required');
+                resetPill();
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recording.webm');
+            formData.append('model', 'whisper-1');
+            formData.append('response_format', 'text');
+
+            const language = await window.electronAPI.getSetting('language');
+            if (language) {
+                formData.append('language', language);
+            }
+
+            const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${apiKey}` },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => 'Unknown error');
+                throw new Error(`API error (${response.status}): ${errorText}`);
+            }
+
+            transcript = await response.text();
         }
 
-        const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            throw new Error(`API request failed (${response.status}): ${errorText}`);
-        }
-
-        const transcript = await response.text();
-
+        // Handle result
         if (transcript && transcript.trim()) {
-            // Send transcript to main process
+            console.log('[Pill] Got transcript:', transcript.trim().substring(0, 50));
             await window.electronAPI.pasteText(transcript.trim());
             window.electronAPI.processingComplete(transcript.trim());
         } else {
@@ -410,18 +462,8 @@ async function processAudio(audioBlob) {
         resetPill();
 
     } catch (error) {
-        console.error('Error processing audio:', error);
-
-        let errorMessage = 'Transcription failed';
-        if (error.message.includes('401')) {
-            errorMessage = 'Invalid API key';
-        } else if (error.message.includes('429')) {
-            errorMessage = 'API rate limit exceeded';
-        } else if (error.message.includes('Network')) {
-            errorMessage = 'Network error';
-        }
-
-        showError(errorMessage);
+        console.error('[Pill] Error:', error);
+        showError(error.message || 'Transcription failed');
         resetPill();
     }
 }

@@ -155,10 +155,33 @@
         .context-menu-item:hover {
             background: rgb(40, 40, 40);
         }
+
+        /* Local mode indicator */
+        .local-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            border: 2px solid rgb(0, 0, 0);
+            display: none;
+        }
+
+        .pill.local-mode .local-indicator {
+            display: block;
+        }
+
+        .pill.recording.local-mode .local-indicator,
+        .pill.processing.local-mode .local-indicator {
+            border-color: inherit;
+        }
     </style>
 </head>
 <body>
     <div class="pill" id="pill">
+        <div class="local-indicator" id="local-indicator" title="Local Mode"></div>
         <div class="status-icon" id="status-icon">
             <!-- Ready state icon -->
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

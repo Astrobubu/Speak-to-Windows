@@ -1,11 +1,14 @@
 {
   "name": "voice-to-text",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Cross-platform voice-to-text transcription app with floating waveform display",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
+    "start:local": "start-app.bat",
+    "server:start": "cd whisper-to-text && .\\venv\\Scripts\\python whisper_server.py",
+    "server:status": "curl http://127.0.0.1:8000/health",
     "build": "electron-builder",
     "build-win": "electron-builder --win --publish=never",
     "build-mac": "electron-builder --mac --publish=never",
@@ -43,6 +46,7 @@
     "icon": "icon.icns",
     "files": [
       "**/*",
+      "whisper-to-text/**/*",
       "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
       "!node_modules/*.d.ts",
@@ -55,7 +59,9 @@
       "!**/{appveyor.yml,.travis.yml,circle.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
       "!dist/**/*",
-      "!build/**/*"
+      "!build/**/*",
+      "!whisper-to-text/venv/**/__pycache__/**/*",
+      "!whisper-to-text/whisperX/**/*"
     ],
     "win": {
       "target": [

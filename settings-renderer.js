@@ -1,4 +1,24 @@
 let currentSettings = {};
+let serverStatusInterval = null;
+
+// Platform-specific labels
+const modKey = window.electronAPI?.modKey || 'Ctrl';
+const osName = window.electronAPI?.osName || 'Windows';
+
+/**
+ * Update all OS-specific labels in the UI
+ */
+function updateOSLabels() {
+    // Update "Start with OS" labels
+    document.querySelectorAll('.os-name').forEach(el => {
+        el.textContent = `Start with ${osName}`;
+    });
+
+    // Update shortcut input placeholders
+    document.querySelectorAll('input[placeholder*="Cmd"], input[placeholder*="Ctrl"]').forEach(el => {
+        el.placeholder = el.placeholder.replace(/Cmd|Ctrl/, modKey);
+    });
+}
 
 // DOM elements
 const minimizeBtn = document.getElementById('minimize-btn');
@@ -13,6 +33,14 @@ const windowShortcutInput = document.getElementById('window-shortcut-input');
 const pillPosition = document.getElementById('pill-position');
 const languageSelect = document.getElementById('language-select');
 
+// Local mode elements
+const localModeCheckbox = document.getElementById('local-mode');
+const localModeOptions = document.getElementById('local-mode-options');
+const whisperModel = document.getElementById('whisper-model');
+const serverStatusIndicator = document.getElementById('server-status-indicator');
+const serverStatusText = document.getElementById('server-status-text');
+const toggleServerBtn = document.getElementById('toggle-server-btn');
+
 const cancelSettings = document.getElementById('cancel-settings');
 const saveSettings = document.getElementById('save-settings');
 
@@ -20,7 +48,10 @@ const saveSettings = document.getElementById('save-settings');
 document.addEventListener('DOMContentLoaded', async () => {
     // Add loaded class to prevent flash
     document.body.classList.add('loaded');
-    
+
+    // Update OS-specific labels (Cmd/Ctrl, macOS/Windows)
+    updateOSLabels();
+
     await loadSettings();
     setupEventListeners();
 });
@@ -32,10 +63,12 @@ async function loadSettings() {
             apiKey: await window.electronAPI.getApiKey() || '',
             showNotifications: await window.electronAPI.getAutoPaste() !== false,
             autoStart: await window.electronAPI.getSetting('autoStart') || false,
-            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || 'Cmd+Shift+R',
-            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || 'Cmd+Shift+S',
+            recordShortcut: await window.electronAPI.getSetting('shortcuts.record') || `${modKey}+Shift+R`,
+            windowShortcut: await window.electronAPI.getSetting('shortcuts.toggleWindow') || `${modKey}+Shift+S`,
             pillPosition: await window.electronAPI.getSetting('pillPosition') || 'bottom-center',
-            language: await window.electronAPI.getSetting('language') || 'en'
+            language: await window.electronAPI.getSetting('language') || 'en',
+            localMode: await window.electronAPI.getSetting('localMode') || false,
+            whisperModel: await window.electronAPI.getSetting('whisperModel') || 'base'
         };
 
         // Update UI
@@ -48,6 +81,18 @@ async function loadSettings() {
         windowShortcutInput.value = currentSettings.windowShortcut;
         pillPosition.value = currentSettings.pillPosition;
         languageSelect.value = currentSettings.language;
+
+        // Local mode settings
+        if (localModeCheckbox) {
+            localModeCheckbox.checked = currentSettings.localMode;
+            toggleLocalModeOptions(currentSettings.localMode);
+        }
+        if (whisperModel) {
+            whisperModel.value = currentSettings.whisperModel;
+        }
+
+        // Check server status
+        updateServerStatus();
 
     } catch (error) {
         console.error('Error loading settings:', error);
@@ -73,19 +118,103 @@ function setupEventListeners() {
     // Shortcut change buttons
     setupShortcutChangers();
 
+    // Local mode toggle
+    if (localModeCheckbox) {
+        localModeCheckbox.addEventListener('change', (e) => {
+            toggleLocalModeOptions(e.target.checked);
+        });
+    }
+
+    // Server toggle button
+    if (toggleServerBtn) {
+        toggleServerBtn.addEventListener('click', toggleServer);
+    }
+
+    // Start polling server status
+    serverStatusInterval = setInterval(updateServerStatus, 3000);
+
     // Escape to close window
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             window.close();
         }
     });
+
+    // Cleanup on window close
+    window.addEventListener('beforeunload', () => {
+        if (serverStatusInterval) {
+            clearInterval(serverStatusInterval);
+        }
+    });
+}
+
+function toggleLocalModeOptions(show) {
+    if (localModeOptions) {
+        localModeOptions.classList.toggle('hidden', !show);
+    }
+}
+
+async function updateServerStatus() {
+    try {
+        const status = await window.electronAPI.getWhisperXStatus();
+
+        if (serverStatusIndicator && serverStatusText && toggleServerBtn) {
+            if (status.running) {
+                serverStatusIndicator.className = 'status-indicator online';
+                serverStatusText.textContent = `Running (${status.model || 'base'})`;
+                toggleServerBtn.textContent = 'Stop';
+                toggleServerBtn.classList.add('stop');
+            } else {
+                serverStatusIndicator.className = 'status-indicator offline';
+                serverStatusText.textContent = 'Server offline';
+                toggleServerBtn.textContent = 'Start';
+                toggleServerBtn.classList.remove('stop');
+            }
+        }
+    } catch (error) {
+        console.error('Error checking server status:', error);
+    }
+}
+
+async function toggleServer() {
+    try {
+        const status = await window.electronAPI.getWhisperXStatus();
+
+        toggleServerBtn.disabled = true;
+
+        if (status.running) {
+            toggleServerBtn.textContent = 'Stopping...';
+            await window.electronAPI.stopWhisperXServer();
+        } else {
+            toggleServerBtn.textContent = 'Starting...';
+            serverStatusIndicator.className = 'status-indicator starting';
+            serverStatusText.textContent = 'Starting server...';
+
+            // Save model setting first
+            await window.electronAPI.setSetting('whisperModel', whisperModel.value);
+            await window.electronAPI.startWhisperXServer();
+        }
+
+        // Wait a moment then update status
+        setTimeout(async () => {
+            await updateServerStatus();
+            toggleServerBtn.disabled = false;
+        }, 2000);
+
+    } catch (error) {
+        console.error('Error toggling server:', error);
+        toggleServerBtn.disabled = false;
+        showNotificationIfEnabled('Error', 'Failed to toggle server');
+    }
 }
 
 async function saveSettingsHandler() {
     try {
-        // Validate API key
+        // Validate API key (only if not using local mode)
         const apiKey = apiKeyInput.value.trim();
-        if (apiKey && !apiKey.startsWith('sk-')) {
+        const isLocalMode = localModeCheckbox && localModeCheckbox.checked;
+
+        if (!isLocalMode && apiKey && !apiKey.startsWith('sk-')) {
             showNotificationIfEnabled('Invalid API Key', 'OpenAI API keys start with "sk-"');
             return;
         }
@@ -107,6 +236,16 @@ async function saveSettingsHandler() {
 
         await window.electronAPI.setSetting('language', languageSelect.value);
         currentSettings.language = languageSelect.value;
+
+        // Local mode settings
+        if (localModeCheckbox) {
+            await window.electronAPI.setSetting('localMode', localModeCheckbox.checked);
+            currentSettings.localMode = localModeCheckbox.checked;
+        }
+        if (whisperModel) {
+            await window.electronAPI.setSetting('whisperModel', whisperModel.value);
+            currentSettings.whisperModel = whisperModel.value;
+        }
 
         window.close();
         showNotificationIfEnabled('Settings saved', 'Your preferences have been updated');
