@@ -17,10 +17,19 @@ app.commandLine.appendSwitch('disk-cache-dir', path.join(cacheDir, 'cache'));
 app.commandLine.appendSwitch('gpu-cache-dir', path.join(cacheDir, 'gpu-cache'));
 
 const Store = require('electron-store');
-const { WhisperLauncher } = require('./whisper-to-text/launcher');
+
+// Try to load WhisperLauncher, but don't crash if it's not available
+let WhisperLauncher = null;
+let whisperLauncher = null;
+try {
+  const launcherModule = require('./whisper-to-text/launcher');
+  WhisperLauncher = launcherModule.WhisperLauncher;
+  whisperLauncher = new WhisperLauncher();
+} catch (err) {
+  console.log('[WhisperX] Local whisper module not available - using cloud API only');
+}
 
 const store = new Store();
-const whisperLauncher = new WhisperLauncher();
 let whisperServerStarting = false;
 
 let mainWindow;
@@ -252,14 +261,22 @@ app.on('will-quit', () => {
 
 // Stop WhisperX server when app quits
 app.on('before-quit', async () => {
-  console.log('[App] Stopping WhisperX server...');
-  whisperLauncher.stop();
+  if (whisperLauncher) {
+    console.log('[App] Stopping WhisperX server...');
+    whisperLauncher.stop();
+  }
 });
 
 /**
  * Auto-start Whisper server in background if local mode is enabled
  */
 function autoStartWhisperServer() {
+  // Check if whisper launcher is available
+  if (!whisperLauncher) {
+    console.log('[App] WhisperX not available - using cloud API');
+    return;
+  }
+
   const localMode = store.get('localMode', false);
 
   if (!localMode) {
@@ -296,6 +313,11 @@ function autoStartWhisperServer() {
  * Toggle Whisper server based on local mode setting
  */
 function toggleWhisperServer(enable) {
+  if (!whisperLauncher) {
+    console.log('[App] WhisperX not available');
+    return;
+  }
+
   if (enable) {
     if (whisperServerStarting) {
       console.log('[App] Server already starting...');
@@ -526,10 +548,16 @@ ipcMain.handle('set-app-enabled', (event, enabled) => {
 
 // Handle WhisperX server status
 ipcMain.handle('get-whisperx-status', async () => {
+  if (!whisperLauncher) {
+    return { available: false, running: false, message: 'Local mode not available' };
+  }
   return await whisperLauncher.getStatus();
 });
 
 ipcMain.handle('start-whisperx-server', async () => {
+  if (!whisperLauncher) {
+    return { success: false, error: 'Local whisper not available in this build' };
+  }
   try {
     const result = await whisperLauncher.start({
       model: store.get('whisperModel', 'base'),
@@ -543,6 +571,9 @@ ipcMain.handle('start-whisperx-server', async () => {
 });
 
 ipcMain.handle('stop-whisperx-server', async () => {
+  if (!whisperLauncher) {
+    return { success: false, error: 'Local whisper not available' };
+  }
   whisperLauncher.stop();
   return { success: true };
 });
